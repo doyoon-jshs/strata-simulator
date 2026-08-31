@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
+import { Clinometer, type ClinometerResult } from '@/components/clinometer';
 import { CrossSection } from '@/components/cross-section';
 import { GeologyMap } from '@/components/geology-map';
 import { GeologyScene } from '@/components/geology-scene';
@@ -17,6 +18,7 @@ export function GeologyLab() {
   const [sectionZ, setSectionZ] = useState(0.35);
   const [showSlice, setShowSlice] = useState(true);
   const [showAnswer, setShowAnswer] = useState(true);
+  const [measurement, setMeasurement] = useState<ClinometerResult | null>(null);
 
   return (
     <main className="min-h-screen bg-[#e9e6dc] text-[#173335]">
@@ -45,14 +47,23 @@ export function GeologyLab() {
                 <CardTitle className="text-xl font-bold tracking-[-0.025em]">지형 아래 지층을 관찰하세요</CardTitle>
               </div>
               <CardAction>
-                <div className="flex items-center gap-2 rounded-full bg-[#e7e2d5] px-3 py-2 text-xs font-medium text-[#51625e]">
-                  <Scissors className="size-3.5" /> 절단면
-                  <Switch checked={showSlice} onCheckedChange={setShowSlice} aria-label="3D 절단면 표시" />
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <Clinometer strike={strike} dip={dip} onComplete={setMeasurement} />
+                  <div className="flex items-center gap-2 rounded-full bg-[#e7e2d5] px-3 py-2 text-xs font-medium text-[#51625e]">
+                    <Scissors className="size-3.5" /> 절단면
+                    <Switch checked={showSlice} onCheckedChange={setShowSlice} aria-label="3D 절단면 표시" />
+                  </div>
                 </div>
               </CardAction>
             </CardHeader>
             <CardContent className="px-3 md:px-4">
               <GeologyScene strike={strike} dip={dip} sectionZ={sectionZ} showSlice={showSlice} />
+              {measurement && (
+                <div className="mx-1 mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#2c6840]/15 bg-[#dcecd8] px-3 py-2 text-xs text-[#315c3f]">
+                  <span className="font-semibold">노두 A 측정 완료</span>
+                  <strong className="font-mono">{formatStrike(measurement.strike)}, {measurement.dip}°{measurement.direction}</strong>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -63,14 +74,14 @@ export function GeologyLab() {
                   <span className="flex items-center gap-2"><Compass className="size-4 text-[#bb704d]" /> 주향</span>
                   <strong className="rounded-md bg-[#e6dfcf] px-2 py-1 font-mono text-xs">{formatStrike(strike)}</strong>
                 </span>
-                <Slider min={0} max={179} step={1} value={[strike]} onValueChange={(value) => setStrike(value[0])} aria-label="주향 조절" />
+                <Slider min={0} max={179} step={1} value={[strike]} onValueChange={(value) => { setStrike(value[0]); setMeasurement(null); }} aria-label="주향 조절" />
               </label>
               <label className="space-y-3">
                 <span className="flex items-center justify-between text-sm font-semibold">
                   <span className="flex items-center gap-2"><Scissors className="size-4 rotate-45 text-[#bb704d]" /> 경사</span>
                   <strong className="rounded-md bg-[#e6dfcf] px-2 py-1 font-mono text-xs">{dip}°{formatDipDirection(strike)}</strong>
                 </span>
-                <Slider min={10} max={65} step={1} value={[dip]} onValueChange={(value) => setDip(value[0])} aria-label="경사각 조절" />
+                <Slider min={10} max={65} step={1} value={[dip]} onValueChange={(value) => { setDip(value[0]); setMeasurement(null); }} aria-label="경사각 조절" />
               </label>
               <div className="flex flex-wrap justify-center gap-2 md:max-w-[170px]">
                 {LAYERS.map((layer) => (
