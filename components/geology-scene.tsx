@@ -128,7 +128,6 @@ export function GeologyScene({ strike, dip, sectionZ, showSlice }: Props) {
     if (!mount) return;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#112a2d');
-    scene.fog = new THREE.Fog('#112a2d', 11, 22);
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
     camera.position.set(8.2, 6.5, 8.7);
     camera.lookAt(0, -0.1, 0);
