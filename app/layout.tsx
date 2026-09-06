@@ -4,6 +4,9 @@ import './globals.css';
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
+const repositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? '';
+const isProjectPage = process.env.GITHUB_ACTIONS === 'true' && repositoryName && !repositoryName.endsWith('.github.io');
+const assetPrefix = isProjectPage ? `/${repositoryName}` : '';
 
 export const metadata: Metadata = {
   title: '지질 구조 시뮬레이터 | STRATA 3D',
@@ -11,13 +14,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: '지질 구조 시뮬레이터',
     description: 'STRATA 3D',
-    images: [{ url: '/og.png', width: 1536, height: 1024, alt: '지질 구조 시뮬레이터 STRATA 3D' }],
+    images: [{ url: `${assetPrefix}/og.png`, width: 1536, height: 1024, alt: '지질 구조 시뮬레이터 STRATA 3D' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: '지질 구조 시뮬레이터',
     description: 'STRATA 3D',
-    images: ['/og.png'],
+    images: [`${assetPrefix}/og.png`],
   },
 };
 
