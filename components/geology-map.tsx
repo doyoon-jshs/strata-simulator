@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   BOUNDS,
-  faultTraceCoordinate,
+  faultPlaneCoordinate,
   layerIndexAt,
   mapToWorldZ,
   surfaceHeight,
@@ -20,12 +20,14 @@ type Props = {
   terrain: TerrainPreset;
   structure: GeologicStructure;
   geologyOffset: number;
+  faultDip: number;
+  unconformityDip: number;
   layers: readonly GeologyLayer[];
   boundaries: readonly number[];
   onSectionChange: (value: number) => void;
 };
 
-export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyOffset, layers, boundaries, onSectionChange }: Props) {
+export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyOffset, faultDip, unconformityDip, layers, boundaries, onSectionChange }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -44,7 +46,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
         const x = BOUNDS.minX + (px / width) * (BOUNDS.maxX - BOUNDS.minX);
         const z = BOUNDS.maxZ - (py / height) * (BOUNDS.maxZ - BOUNDS.minZ);
         const y = surfaceHeight(x, z, terrain);
-        const layer = layers[layerIndexAt(x, y, z, strike, dip, boundaries, structure, geologyOffset)];
+        const layer = layers[layerIndexAt(x, y, z, strike, dip, boundaries, structure, geologyOffset, faultDip, unconformityDip)];
         const hex = layer.color.slice(1);
         let r = Number.parseInt(hex.slice(0, 2), 16);
         let g = Number.parseInt(hex.slice(2, 4), 16);
@@ -67,14 +69,36 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
     context.putImageData(image, 0, 0);
 
     if (structure === 'fault') {
-      const traceX = (z: number) => -faultTraceCoordinate(0, z) / 0.86;
       const mapX = (x: number) => ((x - BOUNDS.minX) / (BOUNDS.maxX - BOUNDS.minX)) * width;
       context.strokeStyle = 'rgba(15,23,42,.88)';
       context.lineWidth = 4;
       context.setLineDash([10, 6]);
       context.beginPath();
-      context.moveTo(mapX(traceX(BOUNDS.maxZ)), 0);
-      context.lineTo(mapX(traceX(BOUNDS.minZ)), height);
+      let drawing = false;
+      for (let py = 0; py <= height; py += 2) {
+        const z = BOUNDS.maxZ - (py / height) * (BOUNDS.maxZ - BOUNDS.minZ);
+        let previousX = BOUNDS.minX;
+        let previousValue = faultPlaneCoordinate(previousX, surfaceHeight(previousX, z, terrain), z, faultDip);
+        let root: number | null = null;
+        for (let step = 1; step <= 160; step += 1) {
+          const x = BOUNDS.minX + ((BOUNDS.maxX - BOUNDS.minX) * step) / 160;
+          const value = faultPlaneCoordinate(x, surfaceHeight(x, z, terrain), z, faultDip);
+          if (value === 0 || previousValue * value < 0) {
+            const mix = Math.abs(previousValue) / (Math.abs(previousValue) + Math.abs(value));
+            root = previousX + (x - previousX) * mix;
+            break;
+          }
+          previousX = x;
+          previousValue = value;
+        }
+        if (root !== null) {
+          if (!drawing) context.moveTo(mapX(root), py);
+          else context.lineTo(mapX(root), py);
+          drawing = true;
+        } else {
+          drawing = false;
+        }
+      }
       context.stroke();
       context.setLineDash([]);
     }
@@ -110,7 +134,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
     context.lineTo(width - 34, 65);
     context.closePath();
     context.fill();
-  }, [strike, dip, sectionZ, terrain, structure, geologyOffset, layers, boundaries]);
+  }, [strike, dip, sectionZ, terrain, structure, geologyOffset, faultDip, unconformityDip, layers, boundaries]);
 
   const updateFromPointer = (clientY: number) => {
     const canvas = canvasRef.current;

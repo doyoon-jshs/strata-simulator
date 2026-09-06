@@ -54,9 +54,12 @@ export function GeologyLab() {
   const [terrain, setTerrain] = useState<TerrainPreset>('ridge-valley');
   const [structure, setStructure] = useState<GeologicStructure>('tilted');
   const [geologyOffset, setGeologyOffset] = useState(0);
+  const [faultDip, setFaultDip] = useState(70);
+  const [unconformityDip, setUnconformityDip] = useState(5);
   const layers = useMemo(() => layersForSuite(rockSuite, layerCount), [rockSuite, layerCount]);
   const boundaries = useMemo(() => layerBoundaries(layerCount, layerSpacing), [layerCount, layerSpacing]);
   const totalThickness = Math.round(layerCount * layerSpacing * 100);
+  const hasStructureDip = structure === 'fault' || structure === 'unconformity';
 
   return (
     <main className="flex min-h-dvh flex-col overflow-y-auto bg-[#f4f6f8] text-slate-900 lg:h-dvh lg:overflow-hidden">
@@ -79,7 +82,7 @@ export function GeologyLab() {
 
         <TabsContent value="simulation" keepMounted className="flex min-h-0 flex-1 flex-col data-[hidden]:hidden">
           <section className="shrink-0 border-b border-slate-200 bg-white px-4 py-2.5 md:px-6">
-            <div className="grid gap-x-5 gap-y-3 sm:grid-cols-2 lg:grid-cols-3 lg:items-end xl:grid-cols-[.78fr_.78fr_.78fr_1.15fr_1.55fr]">
+            <div className={`grid gap-x-5 gap-y-3 sm:grid-cols-2 lg:grid-cols-3 lg:items-end ${hasStructureDip ? 'xl:grid-cols-6' : 'xl:grid-cols-5'}`}>
               <ParameterSlider label="지층 방향(주향)" valueLabel={formatStrike(strike)} value={strike} min={0} max={179} step={1} onChange={setStrike} />
               <ParameterSlider label="지층 경사" valueLabel={`${dip}° ${formatDipDirection(strike)}`} value={dip} min={0} max={75} step={1} onChange={setDip} />
               <ParameterSlider
@@ -91,6 +94,12 @@ export function GeologyLab() {
                 step={0.05}
                 onChange={setGeologyOffset}
               />
+              {structure === 'fault' && (
+                <ParameterSlider label="단층면 경사" valueLabel={`${faultDip}°`} value={faultDip} min={35} max={90} step={1} onChange={setFaultDip} />
+              )}
+              {structure === 'unconformity' && (
+                <ParameterSlider label="부정합면 경사" valueLabel={`${unconformityDip}°`} value={unconformityDip} min={0} max={25} step={1} onChange={setUnconformityDip} />
+              )}
               <fieldset className="min-w-0 space-y-1.5">
                 <legend className="text-[11px] font-semibold text-slate-600">지질 구조</legend>
                 <div className="flex gap-1 overflow-x-auto">
@@ -108,7 +117,7 @@ export function GeologyLab() {
                   ))}
                 </div>
               </fieldset>
-              <fieldset className="min-w-0 space-y-1.5 sm:col-span-2 lg:col-span-2 xl:col-span-1">
+              <fieldset className={`min-w-0 space-y-1.5 sm:col-span-2 ${hasStructureDip ? 'lg:col-span-1' : 'lg:col-span-2'} xl:col-span-1`}>
                 <legend className="text-[11px] font-semibold text-slate-600">지형 유형</legend>
                 <div className="flex gap-1 overflow-x-auto">
                   {TERRAIN_PRESETS.map((preset) => (
@@ -139,7 +148,7 @@ export function GeologyLab() {
                   <CardAction><Badge variant="outline" className="border-slate-200 bg-slate-50 font-mono text-[10px] text-slate-500">ORBIT · ZOOM</Badge></CardAction>
                 </CardHeader>
                 <CardContent className="min-h-0 flex-1 px-3 md:px-4">
-                  <GeologyScene strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} structure={structure} geologyOffset={geologyOffset} layers={layers} boundaries={boundaries} />
+                  <GeologyScene strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} structure={structure} geologyOffset={geologyOffset} faultDip={faultDip} unconformityDip={unconformityDip} layers={layers} boundaries={boundaries} />
                 </CardContent>
               </Card>
             </section>
@@ -151,7 +160,7 @@ export function GeologyLab() {
                   <CardAction><Badge variant="outline" className="border-slate-200 bg-slate-50 font-mono text-[10px] text-slate-500">DRAG X–Y</Badge></CardAction>
                 </CardHeader>
                 <CardContent className="flex min-h-0 flex-1 px-3">
-                  <GeologyMap strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} structure={structure} geologyOffset={geologyOffset} layers={layers} boundaries={boundaries} onSectionChange={setSectionZ} />
+                  <GeologyMap strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} structure={structure} geologyOffset={geologyOffset} faultDip={faultDip} unconformityDip={unconformityDip} layers={layers} boundaries={boundaries} onSectionChange={setSectionZ} />
                 </CardContent>
               </Card>
 
@@ -161,7 +170,7 @@ export function GeologyLab() {
                   <CardAction><span className="font-mono text-xs text-slate-500">Z {sectionZ.toFixed(1)}</span></CardAction>
                 </CardHeader>
                 <CardContent className="min-h-0 flex-1 px-3">
-                  <CrossSection strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} structure={structure} geologyOffset={geologyOffset} layers={layers} boundaries={boundaries} />
+                  <CrossSection strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} structure={structure} geologyOffset={geologyOffset} faultDip={faultDip} unconformityDip={unconformityDip} layers={layers} boundaries={boundaries} />
                 </CardContent>
               </Card>
             </aside>

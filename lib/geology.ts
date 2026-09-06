@@ -128,12 +128,32 @@ export function stratigraphicCoordinate(
   return y * Math.cos(dipRadians) + downDipDistance * Math.sin(dipRadians);
 }
 
+const FAULT_X_COMPONENT = 0.86;
+const FAULT_Z_COMPONENT = 0.5;
+const FAULT_HORIZONTAL_LENGTH = Math.hypot(FAULT_X_COMPONENT, FAULT_Z_COMPONENT);
+export const FAULT_REFERENCE_HEIGHT = 0.15;
+
 export function faultTraceCoordinate(x: number, z: number) {
   return x * 0.86 + z * 0.5;
 }
 
-export function unconformityHeight(x: number, z: number) {
-  return 0.24 + 0.07 * Math.sin(x * 0.85) + 0.035 * Math.cos(z * 1.2);
+export function faultPlaneCoordinate(x: number, y: number, z: number, faultDip = 90) {
+  const dipRadians = (faultDip * Math.PI) / 180;
+  const horizontal = faultTraceCoordinate(x, z) / FAULT_HORIZONTAL_LENGTH;
+  return horizontal * Math.sin(dipRadians) + (y - FAULT_REFERENCE_HEIGHT) * Math.cos(dipRadians);
+}
+
+export function faultXAtHeight(y: number, z: number, faultDip = 90) {
+  const dipRadians = (faultDip * Math.PI) / 180;
+  const horizontal = -((y - FAULT_REFERENCE_HEIGHT) * Math.cos(dipRadians)) / Math.max(Math.sin(dipRadians), 0.001);
+  return (horizontal * FAULT_HORIZONTAL_LENGTH - FAULT_Z_COMPONENT * z) / FAULT_X_COMPONENT;
+}
+
+export function unconformityHeight(x: number, z: number, strike = 0, unconformityDip = 0) {
+  const dipDirection = ((strike + 90) * Math.PI) / 180;
+  const downDipDistance = x * Math.sin(dipDirection) + z * Math.cos(dipDirection);
+  const dipRadians = (unconformityDip * Math.PI) / 180;
+  return 0.24 - downDipDistance * Math.tan(dipRadians) + 0.07 * Math.sin(x * 0.85) + 0.035 * Math.cos(z * 1.2);
 }
 
 function indexFromCoordinate(coordinate: number, boundaries: readonly number[]) {
@@ -152,6 +172,8 @@ export function layerIndexAt(
   boundaries: readonly number[] = LAYER_BOUNDARIES,
   structure: GeologicStructure = 'tilted',
   offset = 0,
+  faultDip = 90,
+  unconformityDip = 0,
 ) {
   const count = boundaries.length + 1;
   const spacing = Math.abs(boundaries[0] - (boundaries[1] ?? boundaries[0] - 0.63));
@@ -159,7 +181,7 @@ export function layerIndexAt(
 
   if (structure === 'fault') {
     const throwAmount = spacing * 1.35;
-    return indexFromCoordinate(baseCoordinate + (faultTraceCoordinate(x, z) >= 0 ? throwAmount : 0), boundaries);
+    return indexFromCoordinate(baseCoordinate + (faultPlaneCoordinate(x, y, z, faultDip) >= 0 ? throwAmount : 0), boundaries);
   }
 
   if (structure === 'fold') {
@@ -171,7 +193,7 @@ export function layerIndexAt(
 
   if (structure === 'unconformity') {
     const upperCount = Math.min(2, Math.max(1, count - 2));
-    const contact = unconformityHeight(x, z) + offset;
+    const contact = unconformityHeight(x, z, strike, unconformityDip) + offset;
     if (y >= contact) {
       const upperIndex = Math.floor((contact + upperCount * spacing - y) / spacing);
       return Math.max(0, Math.min(upperCount - 1, upperIndex));
