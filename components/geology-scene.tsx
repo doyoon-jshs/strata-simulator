@@ -3,13 +3,16 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { BOUNDS, LAYERS, layerIndexAt, surfaceHeight, type TerrainPreset } from '@/lib/geology';
+import { BOUNDS, layerIndexAt, surfaceHeight, type GeologyLayer, type TerrainPreset } from '@/lib/geology';
 
 type Props = {
   strike: number;
   dip: number;
   sectionZ: number;
   terrain: TerrainPreset;
+  layers: readonly GeologyLayer[];
+  boundaries: readonly number[];
+  layerSpacing: number;
 };
 
 function pushTriangle(
@@ -32,7 +35,7 @@ function makeGeometry(positions: number[], colors: number[]) {
   return geometry;
 }
 
-function terrainGeometry(strike: number, dip: number, terrain: TerrainPreset) {
+function terrainGeometry(strike: number, dip: number, terrain: TerrainPreset, layers: readonly GeologyLayer[], boundaries: readonly number[]) {
   const positions: number[] = [];
   const colors: number[] = [];
   const nx = 72;
@@ -50,16 +53,16 @@ function terrainGeometry(strike: number, dip: number, terrain: TerrainPreset) {
       const b = new THREE.Vector3(x1, surfaceHeight(x1, z0, terrain), z0);
       const c = new THREE.Vector3(x1, surfaceHeight(x1, z1, terrain), z1);
       const d = new THREE.Vector3(x0, surfaceHeight(x0, z1, terrain), z1);
-      const layer1 = layerIndexAt((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, (a.z + b.z + c.z) / 3, strike, dip);
-      const layer2 = layerIndexAt((a.x + c.x + d.x) / 3, (a.y + c.y + d.y) / 3, (a.z + c.z + d.z) / 3, strike, dip);
-      pushTriangle(positions, colors, [a, b, c], new THREE.Color(LAYERS[layer1].color));
-      pushTriangle(positions, colors, [a, c, d], new THREE.Color(LAYERS[layer2].color));
+      const layer1 = layerIndexAt((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, (a.z + b.z + c.z) / 3, strike, dip, boundaries);
+      const layer2 = layerIndexAt((a.x + c.x + d.x) / 3, (a.y + c.y + d.y) / 3, (a.z + c.z + d.z) / 3, strike, dip, boundaries);
+      pushTriangle(positions, colors, [a, b, c], new THREE.Color(layers[layer1].color));
+      pushTriangle(positions, colors, [a, c, d], new THREE.Color(layers[layer2].color));
     }
   }
   return makeGeometry(positions, colors);
 }
 
-function wallGeometry(axis: 'x' | 'z', constant: number, strike: number, dip: number, terrain: TerrainPreset) {
+function wallGeometry(axis: 'x' | 'z', constant: number, strike: number, dip: number, terrain: TerrainPreset, layers: readonly GeologyLayer[], boundaries: readonly number[]) {
   const positions: number[] = [];
   const colors: number[] = [];
   const horizontalSteps = 64;
@@ -86,16 +89,16 @@ function wallGeometry(axis: 'x' | 'z', constant: number, strike: number, dip: nu
       const b = new THREE.Vector3(x1, y01, z1);
       const c = new THREE.Vector3(x1, y11, z1);
       const d = new THREE.Vector3(x0, y10, z0);
-      const layer1 = layerIndexAt((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, (a.z + b.z + c.z) / 3, strike, dip);
-      const layer2 = layerIndexAt((a.x + c.x + d.x) / 3, (a.y + c.y + d.y) / 3, (a.z + c.z + d.z) / 3, strike, dip);
-      pushTriangle(positions, colors, [a, b, c], new THREE.Color(LAYERS[layer1].dark));
-      pushTriangle(positions, colors, [a, c, d], new THREE.Color(LAYERS[layer2].dark));
+      const layer1 = layerIndexAt((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, (a.z + b.z + c.z) / 3, strike, dip, boundaries);
+      const layer2 = layerIndexAt((a.x + c.x + d.x) / 3, (a.y + c.y + d.y) / 3, (a.z + c.z + d.z) / 3, strike, dip, boundaries);
+      pushTriangle(positions, colors, [a, b, c], new THREE.Color(layers[layer1].dark));
+      pushTriangle(positions, colors, [a, c, d], new THREE.Color(layers[layer2].dark));
     }
   }
   return makeGeometry(positions, colors);
 }
 
-function sliceGeometry(sectionZ: number, strike: number, dip: number, terrain: TerrainPreset) {
+function sliceGeometry(sectionZ: number, strike: number, dip: number, terrain: TerrainPreset, layers: readonly GeologyLayer[], boundaries: readonly number[]) {
   const positions: number[] = [];
   const colors: number[] = [];
   const nx = 86;
@@ -116,16 +119,16 @@ function sliceGeometry(sectionZ: number, strike: number, dip: number, terrain: T
       const b = new THREE.Vector3(x1, y01, sectionZ);
       const c = new THREE.Vector3(x1, y11, sectionZ);
       const d = new THREE.Vector3(x0, y10, sectionZ);
-      const layer1 = layerIndexAt((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, sectionZ, strike, dip);
-      const layer2 = layerIndexAt((a.x + c.x + d.x) / 3, (a.y + c.y + d.y) / 3, sectionZ, strike, dip);
-      pushTriangle(positions, colors, [a, b, c], new THREE.Color(LAYERS[layer1].color));
-      pushTriangle(positions, colors, [a, c, d], new THREE.Color(LAYERS[layer2].color));
+      const layer1 = layerIndexAt((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, sectionZ, strike, dip, boundaries);
+      const layer2 = layerIndexAt((a.x + c.x + d.x) / 3, (a.y + c.y + d.y) / 3, sectionZ, strike, dip, boundaries);
+      pushTriangle(positions, colors, [a, b, c], new THREE.Color(layers[layer1].color));
+      pushTriangle(positions, colors, [a, c, d], new THREE.Color(layers[layer2].color));
     }
   }
   return makeGeometry(positions, colors);
 }
 
-export function GeologyScene({ strike, dip, sectionZ, terrain }: Props) {
+export function GeologyScene({ strike, dip, sectionZ, terrain, layers, boundaries, layerSpacing }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const cameraViewRef = useRef<{ position: THREE.Vector3; target: THREE.Vector3 } | null>(null);
 
@@ -160,17 +163,17 @@ export function GeologyScene({ strike, dip, sectionZ, terrain }: Props) {
     const surfaceMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, flatShading: true, side: THREE.DoubleSide });
     const wallMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, side: THREE.DoubleSide });
     const sliceMaterial = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.92, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 });
-    const surface = new THREE.Mesh(terrainGeometry(strike, dip, terrain), surfaceMaterial);
+    const surface = new THREE.Mesh(terrainGeometry(strike, dip, terrain, layers, boundaries), surfaceMaterial);
     surface.name = 'terrain-surface';
     scene.add(surface);
     scene.add(
-      new THREE.Mesh(wallGeometry('z', BOUNDS.maxZ, strike, dip, terrain), wallMaterial),
-      new THREE.Mesh(wallGeometry('x', BOUNDS.maxX, strike, dip, terrain), wallMaterial),
-      new THREE.Mesh(wallGeometry('z', BOUNDS.minZ, strike, dip, terrain), wallMaterial),
-      new THREE.Mesh(wallGeometry('x', BOUNDS.minX, strike, dip, terrain), wallMaterial),
+      new THREE.Mesh(wallGeometry('z', BOUNDS.maxZ, strike, dip, terrain, layers, boundaries), wallMaterial),
+      new THREE.Mesh(wallGeometry('x', BOUNDS.maxX, strike, dip, terrain, layers, boundaries), wallMaterial),
+      new THREE.Mesh(wallGeometry('z', BOUNDS.minZ, strike, dip, terrain, layers, boundaries), wallMaterial),
+      new THREE.Mesh(wallGeometry('x', BOUNDS.minX, strike, dip, terrain, layers, boundaries), wallMaterial),
     );
 
-    scene.add(new THREE.Mesh(sliceGeometry(sectionZ, strike, dip, terrain), sliceMaterial));
+    scene.add(new THREE.Mesh(sliceGeometry(sectionZ, strike, dip, terrain, layers, boundaries), sliceMaterial));
     const points = Array.from({ length: 90 }, (_, index) => {
       const x = BOUNDS.minX + ((BOUNDS.maxX - BOUNDS.minX) * index) / 89;
       return new THREE.Vector3(x, surfaceHeight(x, sectionZ, terrain) + 0.012, sectionZ);
@@ -216,12 +219,26 @@ export function GeologyScene({ strike, dip, sectionZ, terrain }: Props) {
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [strike, dip, sectionZ, terrain]);
+  }, [strike, dip, sectionZ, terrain, layers, boundaries]);
 
   return (
     <div className="relative h-full min-h-[440px] overflow-hidden rounded-xl border border-slate-200 bg-[#f4f6f8] lg:min-h-0">
       <div ref={mountRef} className="absolute inset-0" aria-label="회전 가능한 다층 3D 지질 모형" />
       <div className="pointer-events-none absolute left-4 top-4 rounded-md border border-slate-200 bg-white/95 px-3 py-1.5 font-mono text-[10px] font-semibold tracking-wide text-slate-600 shadow-sm backdrop-blur">DRAG TO ORBIT · SCROLL TO ZOOM</div>
+      <div className="pointer-events-none absolute bottom-4 left-4 w-32 rounded-lg border border-slate-200 bg-white/95 p-2.5 shadow-sm backdrop-blur">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500">지질 주상도</span>
+          <span className="font-mono text-[9px] text-blue-600">{layers.length}층</span>
+        </div>
+        <div className="overflow-hidden rounded border border-slate-300">
+          {layers.map((layer) => (
+            <div key={layer.short} className="flex h-5 items-center justify-between px-1.5 text-[9px] font-semibold text-slate-900" style={{ backgroundColor: layer.color }}>
+              <span>{layer.short}</span><span>{layer.name.replace(` ${layer.short}`, '')}</span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-1.5 font-mono text-[9px] text-slate-500">층 간격 {Math.round(layerSpacing * 100)} m</p>
+      </div>
       <div className="pointer-events-none absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 shadow-sm backdrop-blur">
         <span className="absolute top-1 text-[10px] font-bold">N</span>
         <span className="h-7 w-px -translate-y-0.5 bg-blue-600" />

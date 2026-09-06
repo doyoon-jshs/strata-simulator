@@ -7,16 +7,67 @@ export const BOUNDS = {
   top: 1.65,
 } as const;
 
-export const LAYERS = [
-  { name: '사암층 A', short: 'A', color: '#e5bd63', dark: '#b98b36' },
-  { name: '셰일층 B', short: 'B', color: '#c97856', dark: '#92503c' },
-  { name: '석회암층 C', short: 'C', color: '#91a982', dark: '#607957' },
-  { name: '응회암층 D', short: 'D', color: '#6f93a0', dark: '#466a77' },
-  { name: '기반암 E', short: 'E', color: '#475f6a', dark: '#2d4149' },
+export type GeologyLayer = {
+  name: string;
+  short: string;
+  color: string;
+  dark: string;
+};
+
+export const ROCK_SUITES = [
+  { id: 'sedimentary', label: '퇴적암층' },
+  { id: 'mixed', label: '혼합 지층' },
+  { id: 'volcanic', label: '화산암층' },
 ] as const;
 
+export type RockSuite = (typeof ROCK_SUITES)[number]['id'];
+
+const ROCK_LIBRARY: Record<RockSuite, Array<Omit<GeologyLayer, 'name' | 'short'> & { rock: string }>> = {
+  sedimentary: [
+    { rock: '역암', color: '#d4a373', dark: '#9c6b42' },
+    { rock: '사암', color: '#e5bd63', dark: '#b98b36' },
+    { rock: '셰일', color: '#c97856', dark: '#92503c' },
+    { rock: '석회암', color: '#91a982', dark: '#607957' },
+    { rock: '이암', color: '#8da2b5', dark: '#5f7487' },
+    { rock: '사암', color: '#d9a94f', dark: '#9f742e' },
+    { rock: '셰일', color: '#a96f64', dark: '#75483f' },
+  ],
+  mixed: [
+    { rock: '사암', color: '#e5bd63', dark: '#b98b36' },
+    { rock: '셰일', color: '#c97856', dark: '#92503c' },
+    { rock: '응회암', color: '#6f93a0', dark: '#466a77' },
+    { rock: '석회암', color: '#91a982', dark: '#607957' },
+    { rock: '역암', color: '#b98b6b', dark: '#805d45' },
+    { rock: '현무암', color: '#59656f', dark: '#35414b' },
+    { rock: '이암', color: '#9b8aa3', dark: '#6b5b73' },
+  ],
+  volcanic: [
+    { rock: '응회암', color: '#80a6ad', dark: '#4f737a' },
+    { rock: '현무암', color: '#59656f', dark: '#35414b' },
+    { rock: '화산각력암', color: '#a87963', dark: '#76503f' },
+    { rock: '유문암', color: '#c9a4b6', dark: '#916f80' },
+    { rock: '응회암', color: '#7197a5', dark: '#466674' },
+    { rock: '안산암', color: '#7f8790', dark: '#525b65' },
+    { rock: '집괴암', color: '#b28a66', dark: '#7d6045' },
+  ],
+};
+
+export function layersForSuite(suite: RockSuite, count: number): GeologyLayer[] {
+  return ROCK_LIBRARY[suite].slice(0, count).map((layer, index) => ({
+    ...layer,
+    name: `${layer.rock}층 ${String.fromCharCode(65 + index)}`,
+    short: String.fromCharCode(65 + index),
+  }));
+}
+
 // 경계값의 차이는 지층의 실제 두께에 해당한다. 화면의 1단위는 약 100 m이다.
-export const LAYER_BOUNDARIES = [1.42, 0.79, 0.16, -0.47] as const;
+export function layerBoundaries(count: number, spacing: number) {
+  const center = 0.475;
+  return Array.from({ length: count - 1 }, (_, index) => center + ((count - 2) / 2 - index) * spacing);
+}
+
+export const LAYERS = layersForSuite('mixed', 5);
+export const LAYER_BOUNDARIES = layerBoundaries(5, 0.63);
 
 export const TERRAIN_PRESETS = [
   { id: 'ridge-valley', label: '능선·계곡' },
@@ -74,12 +125,13 @@ export function layerIndexAt(
   z: number,
   strike: number,
   dip: number,
+  boundaries: readonly number[] = LAYER_BOUNDARIES,
 ) {
   const coordinate = stratigraphicCoordinate(x, y, z, strike, dip);
-  for (let index = 0; index < LAYER_BOUNDARIES.length; index += 1) {
-    if (coordinate >= LAYER_BOUNDARIES[index]) return index;
+  for (let index = 0; index < boundaries.length; index += 1) {
+    if (coordinate >= boundaries[index]) return index;
   }
-  return LAYERS.length - 1;
+  return boundaries.length;
 }
 
 export function formatStrike(strike: number) {
