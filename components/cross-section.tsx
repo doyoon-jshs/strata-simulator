@@ -18,11 +18,12 @@ type Props = {
   sectionZ: number;
   terrain: TerrainPreset;
   structure: GeologicStructure;
+  geologyOffset: number;
   layers: readonly GeologyLayer[];
   boundaries: readonly number[];
 };
 
-export function CrossSection({ strike, dip, sectionZ, terrain, structure, layers, boundaries }: Props) {
+export function CrossSection({ strike, dip, sectionZ, terrain, structure, geologyOffset, layers, boundaries }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -42,7 +43,7 @@ export function CrossSection({ strike, dip, sectionZ, terrain, structure, layers
         const y = BOUNDS.top - (py / height) * (BOUNDS.top - BOUNDS.bottom);
         const offset = (py * width + px) * 4;
         if (y <= surfaceHeight(x, sectionZ, terrain)) {
-          const layer = layers[layerIndexAt(x, y, sectionZ, strike, dip, boundaries, structure)];
+          const layer = layers[layerIndexAt(x, y, sectionZ, strike, dip, boundaries, structure, geologyOffset)];
           const hex = layer.color.slice(1);
           image.data[offset] = Number.parseInt(hex.slice(0, 2), 16);
           image.data[offset + 1] = Number.parseInt(hex.slice(2, 4), 16);
@@ -93,8 +94,8 @@ export function CrossSection({ strike, dip, sectionZ, terrain, structure, layers
       context.lineWidth = 4;
       context.setLineDash([9, 5]);
       context.beginPath();
-      context.moveTo(px - 13, height);
-      context.lineTo(px + 13, topPy);
+      context.moveTo(px, height);
+      context.lineTo(px, topPy);
       context.stroke();
       context.setLineDash([]);
     }
@@ -106,7 +107,7 @@ export function CrossSection({ strike, dip, sectionZ, terrain, structure, layers
       let drawing = false;
       for (let px = 0; px <= width; px += 2) {
         const x = BOUNDS.minX + (px / width) * (BOUNDS.maxX - BOUNDS.minX);
-        const contact = unconformityHeight(x, sectionZ);
+        const contact = unconformityHeight(x, sectionZ) + geologyOffset;
         if (contact <= surfaceHeight(x, sectionZ, terrain)) {
           const py = ((BOUNDS.top - contact) / (BOUNDS.top - BOUNDS.bottom)) * height;
           if (!drawing) context.moveTo(px, py);
@@ -123,7 +124,7 @@ export function CrossSection({ strike, dip, sectionZ, terrain, structure, layers
     context.font = '700 16px sans-serif';
     context.fillText('X', 10, 21);
     context.fillText('Y', width - 22, 21);
-  }, [dip, sectionZ, strike, terrain, structure, layers, boundaries]);
+  }, [dip, sectionZ, strike, terrain, structure, geologyOffset, layers, boundaries]);
 
   return (
     <div className="flex h-full flex-col gap-3">

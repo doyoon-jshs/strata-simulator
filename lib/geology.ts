@@ -151,10 +151,11 @@ export function layerIndexAt(
   dip: number,
   boundaries: readonly number[] = LAYER_BOUNDARIES,
   structure: GeologicStructure = 'tilted',
+  offset = 0,
 ) {
   const count = boundaries.length + 1;
   const spacing = Math.abs(boundaries[0] - (boundaries[1] ?? boundaries[0] - 0.63));
-  const baseCoordinate = stratigraphicCoordinate(x, y, z, strike, dip);
+  const baseCoordinate = stratigraphicCoordinate(x, y, z, strike, dip) + offset;
 
   if (structure === 'fault') {
     const throwAmount = spacing * 1.35;
@@ -165,12 +166,12 @@ export function layerIndexAt(
     const dipDirection = ((strike + 90) * Math.PI) / 180;
     const acrossFold = x * Math.sin(dipDirection) + z * Math.cos(dipDirection);
     const amplitude = 0.48 + Math.sin((Math.max(dip, 10) * Math.PI) / 180) * 0.9;
-    return indexFromCoordinate(y - amplitude * Math.cos(acrossFold * 0.9), boundaries);
+    return indexFromCoordinate(y - amplitude * Math.cos(acrossFold * 0.9) + offset, boundaries);
   }
 
   if (structure === 'unconformity') {
     const upperCount = Math.min(2, Math.max(1, count - 2));
-    const contact = unconformityHeight(x, z);
+    const contact = unconformityHeight(x, z) + offset;
     if (y >= contact) {
       const upperIndex = Math.floor((contact + upperCount * spacing - y) / spacing);
       return Math.max(0, Math.min(upperCount - 1, upperIndex));
