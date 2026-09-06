@@ -14,9 +14,9 @@ export function GeologyLab() {
   const [sectionZ, setSectionZ] = useState(0.35);
 
   return (
-    <main className="min-h-screen bg-[#f4f6f8] text-slate-900">
-      <header className="border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur md:px-7">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4">
+    <main className="flex min-h-dvh flex-col overflow-y-auto bg-[#f4f6f8] text-slate-900 lg:h-dvh lg:overflow-hidden">
+      <header className="shrink-0 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur md:px-6">
+        <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="grid size-10 shrink-0 place-items-center rounded-lg border border-slate-200 bg-white text-blue-600 shadow-sm"><Layers3 className="size-5" /></div>
             <div className="min-w-0">
@@ -31,9 +31,9 @@ export function GeologyLab() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1600px] gap-4 p-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(380px,.8fr)] lg:p-6">
-        <section className="flex min-w-0 flex-col gap-4">
-          <Card className="border border-slate-200 bg-white py-3 shadow-sm ring-0">
+      <div className="grid w-full gap-3 p-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1.55fr)_minmax(360px,.85fr)] lg:p-4">
+        <section className="min-h-0 min-w-0">
+          <Card className="flex h-full min-h-0 flex-col border border-slate-200 bg-white py-3 shadow-sm ring-0">
             <CardHeader className="px-4 md:px-5">
               <div>
                 <div className="mb-1 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-600"><Sparkles className="size-3.5" /> 3D viewport</div>
@@ -41,14 +41,14 @@ export function GeologyLab() {
               </div>
               <CardAction><Badge variant="outline" className="border-slate-200 bg-slate-50 font-mono text-[10px] text-slate-500">ORBIT · ZOOM</Badge></CardAction>
             </CardHeader>
-            <CardContent className="px-3 md:px-4">
+            <CardContent className="min-h-0 flex-1 px-3 md:px-4">
               <GeologyScene strike={strike} dip={dip} sectionZ={sectionZ} />
             </CardContent>
           </Card>
         </section>
 
-        <aside className="grid min-w-0 gap-4 lg:grid-rows-[minmax(310px,.9fr)_minmax(330px,1.1fr)]">
-          <Card className="border border-slate-200 bg-white shadow-sm ring-0">
+        <aside className="grid min-h-0 min-w-0 gap-3 lg:grid-rows-2">
+          <Card className="flex min-h-0 flex-col border border-slate-200 bg-white shadow-sm ring-0">
             <CardHeader className="border-b border-slate-100">
               <div><p className="mb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-600">Map view</p><CardTitle className="font-bold">지질 평면도</CardTitle></div>
               <CardAction><Badge variant="outline" className="border-slate-200 bg-slate-50 font-mono text-[10px] text-slate-500">DRAG X–Y</Badge></CardAction>
@@ -58,7 +58,7 @@ export function GeologyLab() {
             </CardContent>
           </Card>
 
-          <Card className="border border-slate-200 bg-white shadow-sm ring-0">
+          <Card className="flex min-h-0 flex-col border border-slate-200 bg-white shadow-sm ring-0">
             <CardHeader className="border-b border-slate-100">
               <div><p className="mb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-600">Section view</p><CardTitle className="font-bold">X–Y 단면</CardTitle></div>
               <CardAction><span className="font-mono text-xs text-slate-500">Z {sectionZ.toFixed(1)}</span></CardAction>

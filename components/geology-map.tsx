@@ -89,7 +89,7 @@ export function GeologyMap({ strike, dip, sectionZ, onSectionChange }: Props) {
   return (
     <canvas
       ref={canvasRef}
-      className="h-full min-h-[210px] w-full cursor-ns-resize rounded-lg border border-slate-200 object-cover"
+      className="h-full min-h-[250px] w-full cursor-ns-resize rounded-lg border border-slate-200 object-cover lg:min-h-0"
       aria-label="단면선 X-Y를 위아래로 이동할 수 있는 지질도"
       onPointerDown={(event) => {
         setDragging(true);

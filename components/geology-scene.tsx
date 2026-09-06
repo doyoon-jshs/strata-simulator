@@ -210,7 +210,7 @@ export function GeologyScene({ strike, dip, sectionZ }: Props) {
   }, [strike, dip, sectionZ]);
 
   return (
-    <div className="relative h-full min-h-[430px] overflow-hidden rounded-xl border border-slate-200 bg-[#f4f6f8]">
+    <div className="relative h-full min-h-[440px] overflow-hidden rounded-xl border border-slate-200 bg-[#f4f6f8] lg:min-h-0">
       <div ref={mountRef} className="absolute inset-0" aria-label="회전 가능한 다층 3D 지질 모형" />
       <div className="pointer-events-none absolute left-4 top-4 rounded-md border border-slate-200 bg-white/95 px-3 py-1.5 font-mono text-[10px] font-semibold tracking-wide text-slate-600 shadow-sm backdrop-blur">DRAG TO ORBIT · SCROLL TO ZOOM</div>
       <div className="pointer-events-none absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 shadow-sm backdrop-blur">

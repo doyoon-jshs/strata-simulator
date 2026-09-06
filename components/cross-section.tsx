@@ -77,7 +77,7 @@ export function CrossSection({ strike, dip, sectionZ }: Props) {
     <div className="flex h-full flex-col gap-3">
       <canvas
         ref={canvasRef}
-        className="min-h-[220px] w-full flex-1 rounded-lg border border-slate-200"
+        className="min-h-[250px] w-full flex-1 rounded-lg border border-slate-200 lg:min-h-0"
         aria-label="X-Y 지질 단면 시뮬레이션 결과"
       />
       <p className="font-mono text-[10px] uppercase tracking-wide text-slate-500">Live section · linked to X–Y position</p>
