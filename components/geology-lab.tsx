@@ -1,15 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Compass, Layers3, Scissors, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { Clinometer, type ClinometerResult } from '@/components/clinometer';
 import { CrossSection } from '@/components/cross-section';
 import { GeologyMap } from '@/components/geology-map';
-import { GeologyScene } from '@/components/geology-scene';
+import { GeologyScene, type SurfaceMeasurement } from '@/components/geology-scene';
 import { LAYERS, formatDipDirection, formatStrike } from '@/lib/geology';
 
 export function GeologyLab() {
@@ -19,8 +18,8 @@ export function GeologyLab() {
   const [draftDip, setDraftDip] = useState(32);
   const [sectionZ, setSectionZ] = useState(0.35);
   const [showSlice, setShowSlice] = useState(true);
-  const [showAnswer, setShowAnswer] = useState(true);
-  const [measurement, setMeasurement] = useState<ClinometerResult | null>(null);
+  const [measurement, setMeasurement] = useState<SurfaceMeasurement | null>(null);
+  const handleMeasurement = useCallback((result: SurfaceMeasurement) => setMeasurement(result), []);
 
   return (
     <main className="min-h-screen bg-[#f4f6f8] text-slate-900">
@@ -50,20 +49,20 @@ export function GeologyLab() {
               </div>
               <CardAction>
                 <div className="flex flex-wrap items-center justify-end gap-2">
-                  <Clinometer strike={strike} dip={dip} onComplete={setMeasurement} />
                   <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
                     <Scissors className="size-3.5" /> 절단면
-                    <Switch checked={showSlice} onCheckedChange={setShowSlice} aria-label="3D 절단면 표시" />
+                    <Switch checked={showSlice} onCheckedChange={(value) => { setShowSlice(value); setMeasurement(null); }} aria-label="3D 절단면 표시" />
                   </div>
                 </div>
               </CardAction>
             </CardHeader>
             <CardContent className="px-3 md:px-4">
-              <GeologyScene strike={strike} dip={dip} sectionZ={sectionZ} showSlice={showSlice} />
+              <GeologyScene strike={strike} dip={dip} sectionZ={sectionZ} showSlice={showSlice} onMeasure={handleMeasurement} />
               {measurement && (
                 <div className="mx-1 mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-                  <span className="font-semibold">MEASUREMENT · A</span>
-                  <strong className="font-mono">{formatStrike(measurement.strike)}, {measurement.dip}°{measurement.direction}</strong>
+                  <span className="font-semibold">MEASUREMENT · {measurement.layer}</span>
+                  <span className="font-mono text-[10px] text-blue-600">X {measurement.x.toFixed(2)} · Z {measurement.z.toFixed(2)} · H {measurement.elevation.toFixed(2)}</span>
+                  <strong className="font-mono">{formatStrike(measurement.strike)} · {measurement.dip}°{measurement.direction}</strong>
                 </div>
               )}
             </CardContent>
@@ -119,7 +118,7 @@ export function GeologyLab() {
               <CardAction><Badge variant="outline" className="border-slate-200 bg-slate-50 font-mono text-[10px] text-slate-500">DRAG X–Y</Badge></CardAction>
             </CardHeader>
             <CardContent className="flex min-h-0 flex-1 px-3">
-              <GeologyMap strike={strike} dip={dip} sectionZ={sectionZ} onSectionChange={setSectionZ} />
+              <GeologyMap strike={strike} dip={dip} sectionZ={sectionZ} onSectionChange={(value) => { setSectionZ(value); setMeasurement(null); }} />
             </CardContent>
           </Card>
 
@@ -129,7 +128,7 @@ export function GeologyLab() {
               <CardAction><span className="font-mono text-xs text-slate-500">Z {sectionZ.toFixed(1)}</span></CardAction>
             </CardHeader>
             <CardContent className="min-h-0 flex-1 px-3">
-              <CrossSection strike={strike} dip={dip} sectionZ={sectionZ} showAnswer={showAnswer} onShowAnswerChange={setShowAnswer} />
+              <CrossSection strike={strike} dip={dip} sectionZ={sectionZ} />
             </CardContent>
           </Card>
         </aside>
