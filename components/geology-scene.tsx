@@ -3,13 +3,14 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { BOUNDS, layerIndexAt, surfaceHeight, type GeologyLayer, type TerrainPreset } from '@/lib/geology';
+import { BOUNDS, layerIndexAt, surfaceHeight, type GeologicStructure, type GeologyLayer, type TerrainPreset } from '@/lib/geology';
 
 type Props = {
   strike: number;
   dip: number;
   sectionZ: number;
   terrain: TerrainPreset;
+  structure: GeologicStructure;
   layers: readonly GeologyLayer[];
   boundaries: readonly number[];
 };
@@ -34,7 +35,7 @@ function makeGeometry(positions: number[], colors: number[]) {
   return geometry;
 }
 
-function terrainGeometry(strike: number, dip: number, terrain: TerrainPreset, layers: readonly GeologyLayer[], boundaries: readonly number[]) {
+function terrainGeometry(strike: number, dip: number, terrain: TerrainPreset, structure: GeologicStructure, layers: readonly GeologyLayer[], boundaries: readonly number[]) {
   const positions: number[] = [];
   const colors: number[] = [];
   const nx = 72;
@@ -52,8 +53,8 @@ function terrainGeometry(strike: number, dip: number, terrain: TerrainPreset, la
       const b = new THREE.Vector3(x1, surfaceHeight(x1, z0, terrain), z0);
       const c = new THREE.Vector3(x1, surfaceHeight(x1, z1, terrain), z1);
       const d = new THREE.Vector3(x0, surfaceHeight(x0, z1, terrain), z1);
-      const layer1 = layerIndexAt((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, (a.z + b.z + c.z) / 3, strike, dip, boundaries);
-      const layer2 = layerIndexAt((a.x + c.x + d.x) / 3, (a.y + c.y + d.y) / 3, (a.z + c.z + d.z) / 3, strike, dip, boundaries);
+      const layer1 = layerIndexAt((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, (a.z + b.z + c.z) / 3, strike, dip, boundaries, structure);
+      const layer2 = layerIndexAt((a.x + c.x + d.x) / 3, (a.y + c.y + d.y) / 3, (a.z + c.z + d.z) / 3, strike, dip, boundaries, structure);
       pushTriangle(positions, colors, [a, b, c], new THREE.Color(layers[layer1].color));
       pushTriangle(positions, colors, [a, c, d], new THREE.Color(layers[layer2].color));
     }
@@ -61,7 +62,7 @@ function terrainGeometry(strike: number, dip: number, terrain: TerrainPreset, la
   return makeGeometry(positions, colors);
 }
 
-function wallGeometry(axis: 'x' | 'z', constant: number, strike: number, dip: number, terrain: TerrainPreset, layers: readonly GeologyLayer[], boundaries: readonly number[]) {
+function wallGeometry(axis: 'x' | 'z', constant: number, strike: number, dip: number, terrain: TerrainPreset, structure: GeologicStructure, layers: readonly GeologyLayer[], boundaries: readonly number[]) {
   const positions: number[] = [];
   const colors: number[] = [];
   const horizontalSteps = 64;
@@ -88,8 +89,8 @@ function wallGeometry(axis: 'x' | 'z', constant: number, strike: number, dip: nu
       const b = new THREE.Vector3(x1, y01, z1);
       const c = new THREE.Vector3(x1, y11, z1);
       const d = new THREE.Vector3(x0, y10, z0);
-      const layer1 = layerIndexAt((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, (a.z + b.z + c.z) / 3, strike, dip, boundaries);
-      const layer2 = layerIndexAt((a.x + c.x + d.x) / 3, (a.y + c.y + d.y) / 3, (a.z + c.z + d.z) / 3, strike, dip, boundaries);
+      const layer1 = layerIndexAt((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, (a.z + b.z + c.z) / 3, strike, dip, boundaries, structure);
+      const layer2 = layerIndexAt((a.x + c.x + d.x) / 3, (a.y + c.y + d.y) / 3, (a.z + c.z + d.z) / 3, strike, dip, boundaries, structure);
       pushTriangle(positions, colors, [a, b, c], new THREE.Color(layers[layer1].dark));
       pushTriangle(positions, colors, [a, c, d], new THREE.Color(layers[layer2].dark));
     }
@@ -97,7 +98,7 @@ function wallGeometry(axis: 'x' | 'z', constant: number, strike: number, dip: nu
   return makeGeometry(positions, colors);
 }
 
-function sliceGeometry(sectionZ: number, strike: number, dip: number, terrain: TerrainPreset, layers: readonly GeologyLayer[], boundaries: readonly number[]) {
+function sliceGeometry(sectionZ: number, strike: number, dip: number, terrain: TerrainPreset, structure: GeologicStructure, layers: readonly GeologyLayer[], boundaries: readonly number[]) {
   const positions: number[] = [];
   const colors: number[] = [];
   const nx = 86;
@@ -118,8 +119,8 @@ function sliceGeometry(sectionZ: number, strike: number, dip: number, terrain: T
       const b = new THREE.Vector3(x1, y01, sectionZ);
       const c = new THREE.Vector3(x1, y11, sectionZ);
       const d = new THREE.Vector3(x0, y10, sectionZ);
-      const layer1 = layerIndexAt((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, sectionZ, strike, dip, boundaries);
-      const layer2 = layerIndexAt((a.x + c.x + d.x) / 3, (a.y + c.y + d.y) / 3, sectionZ, strike, dip, boundaries);
+      const layer1 = layerIndexAt((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, sectionZ, strike, dip, boundaries, structure);
+      const layer2 = layerIndexAt((a.x + c.x + d.x) / 3, (a.y + c.y + d.y) / 3, sectionZ, strike, dip, boundaries, structure);
       pushTriangle(positions, colors, [a, b, c], new THREE.Color(layers[layer1].color));
       pushTriangle(positions, colors, [a, c, d], new THREE.Color(layers[layer2].color));
     }
@@ -127,7 +128,7 @@ function sliceGeometry(sectionZ: number, strike: number, dip: number, terrain: T
   return makeGeometry(positions, colors);
 }
 
-export function GeologyScene({ strike, dip, sectionZ, terrain, layers, boundaries }: Props) {
+export function GeologyScene({ strike, dip, sectionZ, terrain, structure, layers, boundaries }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const cameraViewRef = useRef<{ position: THREE.Vector3; target: THREE.Vector3 } | null>(null);
 
@@ -162,23 +163,31 @@ export function GeologyScene({ strike, dip, sectionZ, terrain, layers, boundarie
     const surfaceMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, flatShading: true, side: THREE.DoubleSide });
     const wallMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, side: THREE.DoubleSide });
     const sliceMaterial = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.92, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 });
-    const surface = new THREE.Mesh(terrainGeometry(strike, dip, terrain, layers, boundaries), surfaceMaterial);
+    const surface = new THREE.Mesh(terrainGeometry(strike, dip, terrain, structure, layers, boundaries), surfaceMaterial);
     surface.name = 'terrain-surface';
     scene.add(surface);
     scene.add(
-      new THREE.Mesh(wallGeometry('z', BOUNDS.maxZ, strike, dip, terrain, layers, boundaries), wallMaterial),
-      new THREE.Mesh(wallGeometry('x', BOUNDS.maxX, strike, dip, terrain, layers, boundaries), wallMaterial),
-      new THREE.Mesh(wallGeometry('z', BOUNDS.minZ, strike, dip, terrain, layers, boundaries), wallMaterial),
-      new THREE.Mesh(wallGeometry('x', BOUNDS.minX, strike, dip, terrain, layers, boundaries), wallMaterial),
+      new THREE.Mesh(wallGeometry('z', BOUNDS.maxZ, strike, dip, terrain, structure, layers, boundaries), wallMaterial),
+      new THREE.Mesh(wallGeometry('x', BOUNDS.maxX, strike, dip, terrain, structure, layers, boundaries), wallMaterial),
+      new THREE.Mesh(wallGeometry('z', BOUNDS.minZ, strike, dip, terrain, structure, layers, boundaries), wallMaterial),
+      new THREE.Mesh(wallGeometry('x', BOUNDS.minX, strike, dip, terrain, structure, layers, boundaries), wallMaterial),
     );
 
-    scene.add(new THREE.Mesh(sliceGeometry(sectionZ, strike, dip, terrain, layers, boundaries), sliceMaterial));
+    scene.add(new THREE.Mesh(sliceGeometry(sectionZ, strike, dip, terrain, structure, layers, boundaries), sliceMaterial));
     const points = Array.from({ length: 90 }, (_, index) => {
       const x = BOUNDS.minX + ((BOUNDS.maxX - BOUNDS.minX) * index) / 89;
       return new THREE.Vector3(x, surfaceHeight(x, sectionZ, terrain) + 0.012, sectionZ);
     });
     const topLineMaterial = new THREE.LineBasicMaterial({ color: '#2563eb' });
     scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), topLineMaterial));
+    let structureMaterial: THREE.MeshBasicMaterial | null = null;
+    if (structure === 'fault') {
+      structureMaterial = new THREE.MeshBasicMaterial({ color: '#1e293b', transparent: true, opacity: 0.2, side: THREE.DoubleSide, depthWrite: false });
+      const faultPlane = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 4.2), structureMaterial);
+      faultPlane.rotation.y = Math.atan2(0.86, 0.5);
+      faultPlane.position.y = -0.25;
+      scene.add(faultPlane);
+    }
     const grid = new THREE.GridHelper(12, 12, '#cbd5e1', '#e2e8f0');
     grid.position.y = BOUNDS.bottom - 0.03;
     scene.add(grid);
@@ -215,10 +224,11 @@ export function GeologyScene({ strike, dip, sectionZ, terrain, layers, boundarie
       wallMaterial.dispose();
       sliceMaterial.dispose();
       topLineMaterial?.dispose();
+      structureMaterial?.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [strike, dip, sectionZ, terrain, layers, boundaries]);
+  }, [strike, dip, sectionZ, terrain, structure, layers, boundaries]);
 
   return (
     <div className="relative h-full min-h-[440px] overflow-hidden rounded-xl border border-slate-200 bg-[#f4f6f8] lg:min-h-0">

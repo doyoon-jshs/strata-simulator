@@ -12,11 +12,13 @@ import { GeologyMap } from '@/components/geology-map';
 import { GeologyScene } from '@/components/geology-scene';
 import {
   ROCK_SUITES,
+  STRUCTURE_PRESETS,
   TERRAIN_PRESETS,
   formatDipDirection,
   formatStrike,
   layerBoundaries,
   layersForSuite,
+  type GeologicStructure,
   type RockSuite,
   type TerrainPreset,
 } from '@/lib/geology';
@@ -50,6 +52,7 @@ export function GeologyLab() {
   const [rockSuite, setRockSuite] = useState<RockSuite>('mixed');
   const [sectionZ, setSectionZ] = useState(0.35);
   const [terrain, setTerrain] = useState<TerrainPreset>('ridge-valley');
+  const [structure, setStructure] = useState<GeologicStructure>('tilted');
   const layers = useMemo(() => layersForSuite(rockSuite, layerCount), [rockSuite, layerCount]);
   const boundaries = useMemo(() => layerBoundaries(layerCount, layerSpacing), [layerCount, layerSpacing]);
   const totalThickness = Math.round(layerCount * layerSpacing * 100);
@@ -73,11 +76,28 @@ export function GeologyLab() {
           </div>
         </header>
 
-        <TabsContent value="simulation" keepMounted className="min-h-0 flex-1 flex-col data-[hidden]:hidden">
+        <TabsContent value="simulation" keepMounted className="flex min-h-0 flex-1 flex-col data-[hidden]:hidden">
           <section className="shrink-0 border-b border-slate-200 bg-white px-4 py-2.5 md:px-6">
-            <div className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_2fr] lg:items-end">
+            <div className="grid gap-x-5 gap-y-3 sm:grid-cols-2 lg:grid-cols-[.9fr_.9fr_1.15fr_1.65fr] lg:items-end">
               <ParameterSlider label="지층 방향(주향)" valueLabel={formatStrike(strike)} value={strike} min={0} max={179} step={1} onChange={setStrike} />
               <ParameterSlider label="지층 경사" valueLabel={`${dip}° ${formatDipDirection(strike)}`} value={dip} min={0} max={75} step={1} onChange={setDip} />
+              <fieldset className="min-w-0 space-y-1.5">
+                <legend className="text-[11px] font-semibold text-slate-600">지질 구조</legend>
+                <div className="flex gap-1 overflow-x-auto">
+                  {STRUCTURE_PRESETS.map((preset) => (
+                    <Button
+                      key={preset.id}
+                      size="xs"
+                      variant={structure === preset.id ? 'default' : 'outline'}
+                      className={structure === preset.id ? 'bg-slate-800 hover:bg-slate-700' : ''}
+                      aria-pressed={structure === preset.id}
+                      onClick={() => setStructure(preset.id)}
+                    >
+                      {preset.label}
+                    </Button>
+                  ))}
+                </div>
+              </fieldset>
               <fieldset className="min-w-0 space-y-1.5 sm:col-span-2 lg:col-span-1">
                 <legend className="text-[11px] font-semibold text-slate-600">지형 유형</legend>
                 <div className="flex gap-1 overflow-x-auto">
@@ -109,7 +129,7 @@ export function GeologyLab() {
                   <CardAction><Badge variant="outline" className="border-slate-200 bg-slate-50 font-mono text-[10px] text-slate-500">ORBIT · ZOOM</Badge></CardAction>
                 </CardHeader>
                 <CardContent className="min-h-0 flex-1 px-3 md:px-4">
-                  <GeologyScene strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} layers={layers} boundaries={boundaries} />
+                  <GeologyScene strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} structure={structure} layers={layers} boundaries={boundaries} />
                 </CardContent>
               </Card>
             </section>
@@ -121,7 +141,7 @@ export function GeologyLab() {
                   <CardAction><Badge variant="outline" className="border-slate-200 bg-slate-50 font-mono text-[10px] text-slate-500">DRAG X–Y</Badge></CardAction>
                 </CardHeader>
                 <CardContent className="flex min-h-0 flex-1 px-3">
-                  <GeologyMap strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} layers={layers} boundaries={boundaries} onSectionChange={setSectionZ} />
+                  <GeologyMap strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} structure={structure} layers={layers} boundaries={boundaries} onSectionChange={setSectionZ} />
                 </CardContent>
               </Card>
 
@@ -131,15 +151,15 @@ export function GeologyLab() {
                   <CardAction><span className="font-mono text-xs text-slate-500">Z {sectionZ.toFixed(1)}</span></CardAction>
                 </CardHeader>
                 <CardContent className="min-h-0 flex-1 px-3">
-                  <CrossSection strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} layers={layers} boundaries={boundaries} />
+                  <CrossSection strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} structure={structure} layers={layers} boundaries={boundaries} />
                 </CardContent>
               </Card>
             </aside>
           </div>
         </TabsContent>
 
-        <TabsContent value="column" className="min-h-0 flex-1 overflow-y-auto p-3 lg:p-5">
-          <div className="mx-auto grid h-full min-h-[600px] max-w-6xl gap-4 lg:grid-cols-[minmax(320px,.75fr)_minmax(460px,1.25fr)]">
+        <TabsContent value="column" className="flex min-h-0 flex-1 overflow-y-auto p-3 lg:p-5">
+          <div className="mx-auto grid h-full min-h-[600px] w-full max-w-6xl gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(320px,.75fr)_minmax(460px,1.25fr)]">
             <Card className="flex min-h-0 flex-col border border-slate-200 bg-white shadow-sm ring-0">
               <CardHeader className="border-b border-slate-100">
                 <div><p className="mb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-600">Column settings</p><CardTitle className="font-bold">지층 구성</CardTitle></div>

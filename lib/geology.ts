@@ -78,6 +78,15 @@ export const TERRAIN_PRESETS = [
 
 export type TerrainPreset = (typeof TERRAIN_PRESETS)[number]['id'];
 
+export const STRUCTURE_PRESETS = [
+  { id: 'tilted', label: '경사층' },
+  { id: 'fault', label: '단층' },
+  { id: 'unconformity', label: '부정합' },
+  { id: 'fold', label: '습곡' },
+] as const;
+
+export type GeologicStructure = (typeof STRUCTURE_PRESETS)[number]['id'];
+
 function hill(x: number, z: number, centerX: number, centerZ: number, widthX: number, widthZ: number) {
   return Math.exp(-(((x - centerX) / widthX) ** 2 + ((z - centerZ) / widthZ) ** 2));
 }
@@ -119,6 +128,21 @@ export function stratigraphicCoordinate(
   return y * Math.cos(dipRadians) + downDipDistance * Math.sin(dipRadians);
 }
 
+export function faultTraceCoordinate(x: number, z: number) {
+  return x * 0.86 + z * 0.5;
+}
+
+export function unconformityHeight(x: number, z: number) {
+  return 0.24 + 0.07 * Math.sin(x * 0.85) + 0.035 * Math.cos(z * 1.2);
+}
+
+function indexFromCoordinate(coordinate: number, boundaries: readonly number[]) {
+  for (let index = 0; index < boundaries.length; index += 1) {
+    if (coordinate >= boundaries[index]) return index;
+  }
+  return boundaries.length;
+}
+
 export function layerIndexAt(
   x: number,
   y: number,
@@ -126,12 +150,39 @@ export function layerIndexAt(
   strike: number,
   dip: number,
   boundaries: readonly number[] = LAYER_BOUNDARIES,
+  structure: GeologicStructure = 'tilted',
 ) {
-  const coordinate = stratigraphicCoordinate(x, y, z, strike, dip);
-  for (let index = 0; index < boundaries.length; index += 1) {
-    if (coordinate >= boundaries[index]) return index;
+  const count = boundaries.length + 1;
+  const spacing = Math.abs(boundaries[0] - (boundaries[1] ?? boundaries[0] - 0.63));
+  const baseCoordinate = stratigraphicCoordinate(x, y, z, strike, dip);
+
+  if (structure === 'fault') {
+    const throwAmount = spacing * 1.35;
+    return indexFromCoordinate(baseCoordinate + (faultTraceCoordinate(x, z) >= 0 ? throwAmount : 0), boundaries);
   }
-  return boundaries.length;
+
+  if (structure === 'fold') {
+    const dipDirection = ((strike + 90) * Math.PI) / 180;
+    const acrossFold = x * Math.sin(dipDirection) + z * Math.cos(dipDirection);
+    const amplitude = 0.48 + Math.sin((Math.max(dip, 10) * Math.PI) / 180) * 0.9;
+    return indexFromCoordinate(y - amplitude * Math.cos(acrossFold * 0.9), boundaries);
+  }
+
+  if (structure === 'unconformity') {
+    const upperCount = Math.min(2, Math.max(1, count - 2));
+    const contact = unconformityHeight(x, z);
+    if (y >= contact) {
+      const upperIndex = Math.floor((contact + upperCount * spacing - y) / spacing);
+      return Math.max(0, Math.min(upperCount - 1, upperIndex));
+    }
+
+    const lowerCount = count - upperCount;
+    const lowerTopCoordinate = 0.9;
+    const lowerIndex = Math.floor((lowerTopCoordinate - baseCoordinate) / spacing);
+    return upperCount + Math.max(0, Math.min(lowerCount - 1, lowerIndex));
+  }
+
+  return indexFromCoordinate(baseCoordinate, boundaries);
 }
 
 export function formatStrike(strike: number) {

@@ -1,18 +1,28 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { BOUNDS, layerIndexAt, surfaceHeight, type GeologyLayer, type TerrainPreset } from '@/lib/geology';
+import {
+  BOUNDS,
+  faultTraceCoordinate,
+  layerIndexAt,
+  surfaceHeight,
+  unconformityHeight,
+  type GeologicStructure,
+  type GeologyLayer,
+  type TerrainPreset,
+} from '@/lib/geology';
 
 type Props = {
   strike: number;
   dip: number;
   sectionZ: number;
   terrain: TerrainPreset;
+  structure: GeologicStructure;
   layers: readonly GeologyLayer[];
   boundaries: readonly number[];
 };
 
-export function CrossSection({ strike, dip, sectionZ, terrain, layers, boundaries }: Props) {
+export function CrossSection({ strike, dip, sectionZ, terrain, structure, layers, boundaries }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -32,7 +42,7 @@ export function CrossSection({ strike, dip, sectionZ, terrain, layers, boundarie
         const y = BOUNDS.top - (py / height) * (BOUNDS.top - BOUNDS.bottom);
         const offset = (py * width + px) * 4;
         if (y <= surfaceHeight(x, sectionZ, terrain)) {
-          const layer = layers[layerIndexAt(x, y, sectionZ, strike, dip, boundaries)];
+          const layer = layers[layerIndexAt(x, y, sectionZ, strike, dip, boundaries, structure)];
           const hex = layer.color.slice(1);
           image.data[offset] = Number.parseInt(hex.slice(0, 2), 16);
           image.data[offset + 1] = Number.parseInt(hex.slice(2, 4), 16);
@@ -74,11 +84,46 @@ export function CrossSection({ strike, dip, sectionZ, terrain, layers, boundarie
     }
     context.stroke();
 
+    if (structure === 'fault') {
+      const worldX = -faultTraceCoordinate(0, sectionZ) / 0.86;
+      const px = ((worldX - BOUNDS.minX) / (BOUNDS.maxX - BOUNDS.minX)) * width;
+      const topY = surfaceHeight(worldX, sectionZ, terrain);
+      const topPy = ((BOUNDS.top - topY) / (BOUNDS.top - BOUNDS.bottom)) * height;
+      context.strokeStyle = 'rgba(15,23,42,.92)';
+      context.lineWidth = 4;
+      context.setLineDash([9, 5]);
+      context.beginPath();
+      context.moveTo(px - 13, height);
+      context.lineTo(px + 13, topPy);
+      context.stroke();
+      context.setLineDash([]);
+    }
+
+    if (structure === 'unconformity') {
+      context.strokeStyle = '#713f12';
+      context.lineWidth = 4;
+      context.beginPath();
+      let drawing = false;
+      for (let px = 0; px <= width; px += 2) {
+        const x = BOUNDS.minX + (px / width) * (BOUNDS.maxX - BOUNDS.minX);
+        const contact = unconformityHeight(x, sectionZ);
+        if (contact <= surfaceHeight(x, sectionZ, terrain)) {
+          const py = ((BOUNDS.top - contact) / (BOUNDS.top - BOUNDS.bottom)) * height;
+          if (!drawing) context.moveTo(px, py);
+          else context.lineTo(px, py);
+          drawing = true;
+        } else {
+          drawing = false;
+        }
+      }
+      context.stroke();
+    }
+
     context.fillStyle = '#1e293b';
     context.font = '700 16px sans-serif';
     context.fillText('X', 10, 21);
     context.fillText('Y', width - 22, 21);
-  }, [dip, sectionZ, strike, terrain, layers, boundaries]);
+  }, [dip, sectionZ, strike, terrain, structure, layers, boundaries]);
 
   return (
     <div className="flex h-full flex-col gap-3">
