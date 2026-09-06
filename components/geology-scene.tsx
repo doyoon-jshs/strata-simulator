@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { BOUNDS, LAYERS, formatDipDirection, layerIndexAt, surfaceHeight } from '@/lib/geology';
+import { BOUNDS, LAYERS, formatDipDirection, formatStrike, layerIndexAt, surfaceHeight } from '@/lib/geology';
 
 export type SurfaceMeasurement = {
   strike: number;
@@ -20,6 +20,7 @@ type Props = {
   dip: number;
   sectionZ: number;
   showSlice: boolean;
+  measurement: SurfaceMeasurement | null;
   onMeasure: (result: SurfaceMeasurement) => void;
 };
 
@@ -151,7 +152,7 @@ function createClinometerModel(strike: number, dip: number) {
   dial.position.set(0.23, 0.078, 0);
   group.add(dial);
 
-  const needle = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.035, 0.23), accentMaterial);
+  const needle = new THREE.Mesh(new THREE.BoxGeometry(0.23, 0.035, 0.035), accentMaterial);
   needle.position.set(0.23, 0.108, 0);
   group.add(needle);
 
@@ -164,17 +165,22 @@ function createClinometerModel(strike: number, dip: number) {
   marker.position.y = -0.067;
   group.add(marker);
 
+  const directionArrow = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.19, 24), accentMaterial);
+  directionArrow.rotation.z = -Math.PI / 2;
+  directionArrow.position.set(0.48, 0.1, 0);
+  group.add(directionArrow);
+
   const strikeRadians = (strike * Math.PI) / 180;
   const dipDirectionRadians = ((strike + 90) * Math.PI) / 180;
   const dipRadians = (dip * Math.PI) / 180;
   const strikeVector = new THREE.Vector3(Math.sin(strikeRadians), 0, Math.cos(strikeRadians)).normalize();
-  const upDipVector = new THREE.Vector3(
-    -Math.sin(dipDirectionRadians) * Math.cos(dipRadians),
-    Math.sin(dipRadians),
-    -Math.cos(dipDirectionRadians) * Math.cos(dipRadians),
+  const downDipVector = new THREE.Vector3(
+    Math.sin(dipDirectionRadians) * Math.cos(dipRadians),
+    -Math.sin(dipRadians),
+    Math.cos(dipDirectionRadians) * Math.cos(dipRadians),
   ).normalize();
-  const normal = new THREE.Vector3().crossVectors(upDipVector, strikeVector).normalize();
-  group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(strikeVector, normal, upDipVector));
+  const normal = new THREE.Vector3().crossVectors(strikeVector, downDipVector).normalize();
+  group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(downDipVector, normal, strikeVector));
   group.userData.normal = normal;
   return group;
 }
@@ -188,7 +194,7 @@ function disposeObject(object: THREE.Object3D) {
   });
 }
 
-export function GeologyScene({ strike, dip, sectionZ, showSlice, onMeasure }: Props) {
+export function GeologyScene({ strike, dip, sectionZ, showSlice, measurement, onMeasure }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -209,7 +215,7 @@ export function GeologyScene({ strike, dip, sectionZ, showSlice, onMeasure }: Pr
     controls.enableDamping = true;
     controls.target.set(0, -0.2, 0);
     controls.minDistance = 7;
-    controls.maxDistance = 19;
+    controls.maxDistance = 34;
     controls.maxPolarAngle = Math.PI * 0.49;
     scene.add(new THREE.HemisphereLight('#ffffff', '#94a3b8', 2.35));
     const sun = new THREE.DirectionalLight('#ffffff', 2.75);
@@ -270,7 +276,8 @@ export function GeologyScene({ strike, dip, sectionZ, showSlice, onMeasure }: Pr
       }
       instrument = createClinometerModel(strike, dip);
       const normal = instrument.userData.normal as THREE.Vector3;
-      instrument.position.copy(hit.point).addScaledVector(normal, 0.12);
+      instrument.position.copy(hit.point).addScaledVector(normal, 0.14);
+      instrument.position.y += 0.08;
       scene.add(instrument);
 
       const layer = LAYERS[layerIndexAt(hit.point.x, hit.point.y, hit.point.z, strike, dip)];
@@ -332,6 +339,20 @@ export function GeologyScene({ strike, dip, sectionZ, showSlice, onMeasure }: Pr
     <div className="relative h-full min-h-[430px] overflow-hidden rounded-xl border border-slate-200 bg-[#f4f6f8]">
       <div ref={mountRef} className="absolute inset-0" aria-label="회전 가능한 다층 3D 지질 모형" />
       <div className="pointer-events-none absolute left-4 top-4 rounded-md border border-blue-200 bg-white/95 px-3 py-1.5 font-mono text-[10px] font-semibold tracking-wide text-blue-700 shadow-sm backdrop-blur">CLICK TO MEASURE · DRAG TO ORBIT</div>
+      <div className="pointer-events-none absolute right-4 top-4 min-w-44 rounded-lg border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur" aria-live="polite">
+        {measurement ? (
+          <>
+            <p className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-blue-600">Clinometer · {measurement.layer}</p>
+            <div className="mt-1.5 grid grid-cols-2 gap-x-4">
+              <div><span className="block text-[10px] text-slate-500">주향</span><strong className="font-mono text-sm text-slate-900">{formatStrike(measurement.strike)}</strong></div>
+              <div><span className="block text-[10px] text-slate-500">경사</span><strong className="font-mono text-sm text-slate-900">{measurement.dip}°{measurement.direction}</strong></div>
+            </div>
+            <p className="mt-1.5 font-mono text-[9px] text-slate-500">X {measurement.x.toFixed(2)} · Z {measurement.z.toFixed(2)} · H {measurement.elevation.toFixed(2)}</p>
+          </>
+        ) : (
+          <p className="text-xs font-medium text-slate-500">지형을 클릭해 주향과 경사를 측정하세요.</p>
+        )}
+      </div>
       <div className="pointer-events-none absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 shadow-sm backdrop-blur">
         <span className="absolute top-1 text-[10px] font-bold">N</span>
         <span className="h-7 w-px -translate-y-0.5 bg-blue-600" />

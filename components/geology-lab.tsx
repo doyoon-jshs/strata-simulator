@@ -57,14 +57,7 @@ export function GeologyLab() {
               </CardAction>
             </CardHeader>
             <CardContent className="px-3 md:px-4">
-              <GeologyScene strike={strike} dip={dip} sectionZ={sectionZ} showSlice={showSlice} onMeasure={handleMeasurement} />
-              {measurement && (
-                <div className="mx-1 mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-                  <span className="font-semibold">MEASUREMENT · {measurement.layer}</span>
-                  <span className="font-mono text-[10px] text-blue-600">X {measurement.x.toFixed(2)} · Z {measurement.z.toFixed(2)} · H {measurement.elevation.toFixed(2)}</span>
-                  <strong className="font-mono">{formatStrike(measurement.strike)} · {measurement.dip}°{measurement.direction}</strong>
-                </div>
-              )}
+              <GeologyScene strike={strike} dip={dip} sectionZ={sectionZ} showSlice={showSlice} measurement={measurement} onMeasure={handleMeasurement} />
             </CardContent>
           </Card>
 
