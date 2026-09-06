@@ -257,6 +257,101 @@ export function layerIndexAt(
   return indexFromCoordinate(baseCoordinate, boundaries);
 }
 
+export type BeddingOrientation = {
+  strike: number;
+  dip: number;
+  dipDirection: number;
+};
+
+function orientationFromGradient(
+  gradientX: number,
+  gradientZ: number,
+  fallbackStrike: number,
+): BeddingOrientation {
+  const slope = Math.hypot(gradientX, gradientZ);
+  const normalizedFallback = ((fallbackStrike % 180) + 180) % 180;
+
+  if (slope < 0.0001) {
+    return {
+      strike: normalizedFallback,
+      dip: 0,
+      dipDirection: (normalizedFallback + 90) % 360,
+    };
+  }
+
+  const dipDirection = ((Math.atan2(-gradientX, -gradientZ) * 180) / Math.PI + 360) % 360;
+  return {
+    strike: (dipDirection + 270) % 180,
+    dip: (Math.atan(slope) * 180) / Math.PI,
+    dipDirection,
+  };
+}
+
+/** 지질 평면도의 한 지점에 노출된 지층면의 실제 국소 주향·경사. */
+export function beddingOrientationAt(
+  x: number,
+  z: number,
+  strike: number,
+  dip: number,
+  terrain: TerrainPreset,
+  structure: GeologicStructure,
+  boundaries: readonly number[] = LAYER_BOUNDARIES,
+  offset = 0,
+  unconformityDip = 0,
+): BeddingOrientation {
+  const normalizedStrike = ((strike % 180) + 180) % 180;
+  const fixedOrientation = {
+    strike: normalizedStrike,
+    dip,
+    dipDirection: (normalizedStrike + 90) % 360,
+  };
+
+  if (structure === 'fold') {
+    const dipDirectionRadians = ((strike + 90) * Math.PI) / 180;
+    const acrossFold = x * Math.sin(dipDirectionRadians) + z * Math.cos(dipDirectionRadians);
+    const amplitude = 0.48 + Math.sin((Math.max(dip, 10) * Math.PI) / 180) * 0.9;
+    const acrossGradient = -amplitude * 0.9 * Math.sin(acrossFold * 0.9);
+    return orientationFromGradient(
+      acrossGradient * Math.sin(dipDirectionRadians),
+      acrossGradient * Math.cos(dipDirectionRadians),
+      normalizedStrike,
+    );
+  }
+
+  if (structure === 'unconformity') {
+    const layerCount = boundaries.length + 1;
+    const upperCount = Math.min(2, Math.max(1, layerCount - 2));
+    const y = surfaceHeight(x, z, terrain);
+    const exposedLayer = layerIndexAt(
+      x,
+      y,
+      z,
+      strike,
+      dip,
+      boundaries,
+      structure,
+      offset,
+      90,
+      unconformityDip,
+    );
+
+    if (exposedLayer < upperCount) {
+      const sample = 0.002;
+      const gradientX = (
+        unconformityHeight(x + sample, z, strike, unconformityDip)
+        - unconformityHeight(x - sample, z, strike, unconformityDip)
+      ) / (sample * 2);
+      const gradientZ = (
+        unconformityHeight(x, z + sample, strike, unconformityDip)
+        - unconformityHeight(x, z - sample, strike, unconformityDip)
+      ) / (sample * 2);
+      return orientationFromGradient(gradientX, gradientZ, normalizedStrike);
+    }
+  }
+
+  return fixedOrientation;
+}
+
 export function formatStrike(strike: number) {
   const normalized = ((strike % 180) + 180) % 180;
   return normalized <= 90

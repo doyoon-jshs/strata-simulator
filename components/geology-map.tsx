@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   BOUNDS,
+  beddingOrientationAt,
   faultPlaneCoordinate,
   layerIndexAt,
   mapToWorldZ,
@@ -80,7 +81,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
       let drawing = false;
       for (let py = 0; py <= height; py += 2) {
         const z = BOUNDS.maxZ - (py / height) * (BOUNDS.maxZ - BOUNDS.minZ);
-        let previousX = BOUNDS.minX;
+        let previousX: number = BOUNDS.minX;
         let previousValue = faultPlaneCoordinate(previousX, surfaceHeight(previousX, z, terrain), z, faultDip);
         let root: number | null = null;
         for (let step = 1; step <= 160; step += 1) {
@@ -129,16 +130,27 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
       context.save();
       const centerX = ((marker.x - BOUNDS.minX) / (BOUNDS.maxX - BOUNDS.minX)) * width;
       const centerY = worldToMap(marker.z, height);
-      const strikeRadians = (strike * Math.PI) / 180;
+      const orientation = beddingOrientationAt(
+        marker.x,
+        marker.z,
+        strike,
+        dip,
+        terrain,
+        structure,
+        boundaries,
+        geologyOffset,
+        unconformityDip,
+      );
+      const strikeRadians = (orientation.strike * Math.PI) / 180;
       const strikeX = Math.sin(strikeRadians);
       const strikeY = -Math.cos(strikeRadians);
-      const dipRadians = strikeRadians + Math.PI / 2;
-      const dipX = Math.sin(dipRadians);
-      const dipY = -Math.cos(dipRadians);
+      const dipDirectionRadians = (orientation.dipDirection * Math.PI) / 180;
+      const dipX = Math.sin(dipDirectionRadians);
+      const dipY = -Math.cos(dipDirectionRadians);
 
       const drawSymbolPath = () => {
         context.beginPath();
-        if (dip === 0) {
+        if (orientation.dip < 0.5) {
           context.arc(centerX, centerY, 10, 0, Math.PI * 2);
           context.moveTo(centerX - 7, centerY);
           context.lineTo(centerX + 7, centerY);
@@ -166,7 +178,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
       drawSymbolPath();
       context.stroke();
 
-      if (dip > 0) {
+      if (orientation.dip >= 0.5) {
         const labelX = centerX + dipX * 23;
         const labelY = centerY + dipY * 23;
         context.font = '700 15px sans-serif';
@@ -174,9 +186,9 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
         context.textBaseline = 'middle';
         context.lineWidth = 4;
         context.strokeStyle = 'rgba(255,255,255,.96)';
-        context.strokeText(`${Math.round(dip)}°`, labelX, labelY);
+        context.strokeText(`${Math.round(orientation.dip)}°`, labelX, labelY);
         context.fillStyle = '#0f172a';
-        context.fillText(`${Math.round(dip)}°`, labelX, labelY);
+        context.fillText(`${Math.round(orientation.dip)}°`, labelX, labelY);
       }
       context.restore();
     }
