@@ -72,6 +72,9 @@ export const LAYER_BOUNDARIES = layerBoundaries(5, 0.63);
 export const TERRAIN_PRESETS = [
   { id: 'ridge', label: '능선' },
   { id: 'valley', label: '계곡' },
+  { id: 'uniform-slope', label: '일정 경사면' },
+  { id: 'curved-slope', label: '굴곡 경사면' },
+  { id: 'incised-slope', label: '하곡 경사면' },
   { id: 'conical-hill', label: '원추형 산지' },
   { id: 'saddle', label: '안부' },
   { id: 'dissected', label: '침식 산지' },
@@ -103,6 +106,20 @@ export function surfaceHeight(x: number, z: number, terrain: TerrainPreset = 'ri
     const valleyAxis = x - 0.3 * z + 0.25;
     const windingValley = 0.88 * Math.exp(-(valleyAxis ** 2) / 0.72);
     return 0.92 + 0.045 * z - windingValley + 0.035 * Math.sin(z * 1.35);
+  }
+
+  if (terrain === 'uniform-slope') {
+    return 0.48 + 0.15 * x + 0.025 * z;
+  }
+
+  if (terrain === 'curved-slope') {
+    return 0.46 + 0.145 * x + 0.055 * z + 0.16 * Math.sin(z * 0.72) + 0.065 * Math.sin(x * 0.55);
+  }
+
+  if (terrain === 'incised-slope') {
+    const channelAxis = x - 0.34 * Math.sin(z * 0.78);
+    const channel = 0.3 * Math.exp(-(channelAxis ** 2) / 0.28);
+    return 0.58 + 0.14 * x + 0.03 * z - channel;
   }
 
   if (terrain === 'conical-hill') {
