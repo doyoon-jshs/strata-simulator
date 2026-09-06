@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { BOUNDS, LAYERS, layerIndexAt, surfaceHeight } from '@/lib/geology';
+import { BOUNDS, LAYERS, layerIndexAt, surfaceHeight, type TerrainPreset } from '@/lib/geology';
 
-type Props = { strike: number; dip: number; sectionZ: number };
+type Props = { strike: number; dip: number; sectionZ: number; terrain: TerrainPreset };
 
-export function CrossSection({ strike, dip, sectionZ }: Props) {
+export function CrossSection({ strike, dip, sectionZ, terrain }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export function CrossSection({ strike, dip, sectionZ }: Props) {
         const x = BOUNDS.minX + (px / width) * (BOUNDS.maxX - BOUNDS.minX);
         const y = BOUNDS.top - (py / height) * (BOUNDS.top - BOUNDS.bottom);
         const offset = (py * width + px) * 4;
-        if (y <= surfaceHeight(x, sectionZ)) {
+        if (y <= surfaceHeight(x, sectionZ, terrain)) {
           const layer = LAYERS[layerIndexAt(x, y, sectionZ, strike, dip)];
           const hex = layer.color.slice(1);
           image.data[offset] = Number.parseInt(hex.slice(0, 2), 16);
@@ -60,7 +60,7 @@ export function CrossSection({ strike, dip, sectionZ }: Props) {
     context.beginPath();
     for (let px = 0; px <= width; px += 2) {
       const x = BOUNDS.minX + (px / width) * (BOUNDS.maxX - BOUNDS.minX);
-      const y = surfaceHeight(x, sectionZ);
+      const y = surfaceHeight(x, sectionZ, terrain);
       const py = ((BOUNDS.top - y) / (BOUNDS.top - BOUNDS.bottom)) * height;
       if (px === 0) context.moveTo(px, py);
       else context.lineTo(px, py);
@@ -71,7 +71,7 @@ export function CrossSection({ strike, dip, sectionZ }: Props) {
     context.font = '700 16px sans-serif';
     context.fillText('X', 10, 21);
     context.fillText('Y', width - 22, 21);
-  }, [dip, sectionZ, strike]);
+  }, [dip, sectionZ, strike, terrain]);
 
   return (
     <div className="flex h-full flex-col gap-3">

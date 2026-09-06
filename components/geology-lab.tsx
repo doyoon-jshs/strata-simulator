@@ -3,15 +3,18 @@
 import { useState } from 'react';
 import { Layers3, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CrossSection } from '@/components/cross-section';
 import { GeologyMap } from '@/components/geology-map';
 import { GeologyScene } from '@/components/geology-scene';
+import { TERRAIN_PRESETS, type TerrainPreset } from '@/lib/geology';
 
 export function GeologyLab() {
   const strike = 35;
   const dip = 32;
   const [sectionZ, setSectionZ] = useState(0.35);
+  const [terrain, setTerrain] = useState<TerrainPreset>('ridge-valley');
 
   return (
     <main className="flex min-h-dvh flex-col overflow-y-auto bg-[#f4f6f8] text-slate-900 lg:h-dvh lg:overflow-hidden">
@@ -24,9 +27,20 @@ export function GeologyLab() {
               <p className="truncate font-mono text-[10px] uppercase tracking-[0.14em] text-slate-500">Strata 3D · Model 01</p>
             </div>
           </div>
-          <div className="hidden items-center gap-2 sm:flex">
-            <Badge variant="outline" className="border-slate-200 bg-white text-slate-500">LOCAL MODEL</Badge>
-            <Badge className="bg-blue-50 text-blue-700">LIVE</Badge>
+          <div className="flex max-w-[62vw] items-center gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-1">
+            <span className="hidden shrink-0 px-2 font-mono text-[10px] font-semibold uppercase tracking-wide text-slate-500 xl:inline">지형 유형</span>
+            {TERRAIN_PRESETS.map((preset) => (
+              <Button
+                key={preset.id}
+                size="xs"
+                variant={terrain === preset.id ? 'default' : 'ghost'}
+                className={terrain === preset.id ? 'bg-blue-600 hover:bg-blue-600/90' : 'text-slate-600'}
+                aria-pressed={terrain === preset.id}
+                onClick={() => setTerrain(preset.id)}
+              >
+                {preset.label}
+              </Button>
+            ))}
           </div>
         </div>
       </header>
@@ -42,7 +56,7 @@ export function GeologyLab() {
               <CardAction><Badge variant="outline" className="border-slate-200 bg-slate-50 font-mono text-[10px] text-slate-500">ORBIT · ZOOM</Badge></CardAction>
             </CardHeader>
             <CardContent className="min-h-0 flex-1 px-3 md:px-4">
-              <GeologyScene strike={strike} dip={dip} sectionZ={sectionZ} />
+              <GeologyScene strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} />
             </CardContent>
           </Card>
         </section>
@@ -54,7 +68,7 @@ export function GeologyLab() {
               <CardAction><Badge variant="outline" className="border-slate-200 bg-slate-50 font-mono text-[10px] text-slate-500">DRAG X–Y</Badge></CardAction>
             </CardHeader>
             <CardContent className="flex min-h-0 flex-1 px-3">
-              <GeologyMap strike={strike} dip={dip} sectionZ={sectionZ} onSectionChange={setSectionZ} />
+              <GeologyMap strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} onSectionChange={setSectionZ} />
             </CardContent>
           </Card>
 
@@ -64,7 +78,7 @@ export function GeologyLab() {
               <CardAction><span className="font-mono text-xs text-slate-500">Z {sectionZ.toFixed(1)}</span></CardAction>
             </CardHeader>
             <CardContent className="min-h-0 flex-1 px-3">
-              <CrossSection strike={strike} dip={dip} sectionZ={sectionZ} />
+              <CrossSection strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} />
             </CardContent>
           </Card>
         </aside>

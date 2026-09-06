@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { BOUNDS, LAYERS, layerIndexAt, mapToWorldZ, surfaceHeight, worldToMap } from '@/lib/geology';
+import { BOUNDS, LAYERS, layerIndexAt, mapToWorldZ, surfaceHeight, worldToMap, type TerrainPreset } from '@/lib/geology';
 
-type Props = { strike: number; dip: number; sectionZ: number; onSectionChange: (value: number) => void };
+type Props = { strike: number; dip: number; sectionZ: number; terrain: TerrainPreset; onSectionChange: (value: number) => void };
 
-export function GeologyMap({ strike, dip, sectionZ, onSectionChange }: Props) {
+export function GeologyMap({ strike, dip, sectionZ, terrain, onSectionChange }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -23,14 +23,14 @@ export function GeologyMap({ strike, dip, sectionZ, onSectionChange }: Props) {
       for (let px = 0; px < width; px += 1) {
         const x = BOUNDS.minX + (px / width) * (BOUNDS.maxX - BOUNDS.minX);
         const z = BOUNDS.maxZ - (py / height) * (BOUNDS.maxZ - BOUNDS.minZ);
-        const y = surfaceHeight(x, z);
+        const y = surfaceHeight(x, z, terrain);
         const layer = LAYERS[layerIndexAt(x, y, z, strike, dip)];
         const hex = layer.color.slice(1);
         let r = Number.parseInt(hex.slice(0, 2), 16);
         let g = Number.parseInt(hex.slice(2, 4), 16);
         let b = Number.parseInt(hex.slice(4, 6), 16);
-        const neighborX = surfaceHeight(x + 0.018, z);
-        const neighborZ = surfaceHeight(x, z + 0.018);
+        const neighborX = surfaceHeight(x + 0.018, z, terrain);
+        const neighborZ = surfaceHeight(x, z + 0.018, terrain);
         const contour = Math.floor(y / 0.14) !== Math.floor(neighborX / 0.14) || Math.floor(y / 0.14) !== Math.floor(neighborZ / 0.14);
         if (contour) {
           r = Math.round(r * 0.59);
@@ -76,7 +76,7 @@ export function GeologyMap({ strike, dip, sectionZ, onSectionChange }: Props) {
     context.lineTo(width - 34, 65);
     context.closePath();
     context.fill();
-  }, [strike, dip, sectionZ]);
+  }, [strike, dip, sectionZ, terrain]);
 
   const updateFromPointer = (clientY: number) => {
     const canvas = canvasRef.current;
