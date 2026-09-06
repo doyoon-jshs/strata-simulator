@@ -142,7 +142,7 @@ export function Clinometer({ strike, dip, onComplete }: Props) {
                 <BubbleLevel error={headingError} />
                 <label className="block space-y-3">
                   <span className="flex items-center justify-between text-sm font-semibold"><span>기기 회전</span><strong className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs">{formatStrike(heading)}</strong></span>
-                  <Slider min={0} max={179} step={1} value={[heading]} onValueChange={(value) => setHeading(value[0])} aria-label="클리노미터 주향 회전" />
+                  <Slider min={0} max={179} step={1} value={heading} onValueChange={setHeading} aria-label="클리노미터 주향 회전" />
                 </label>
                 <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 font-mono text-[10px] leading-relaxed text-slate-500">LEVEL STATUS · 기포를 두 기준선 사이에 맞추세요.</p>
               </div>
@@ -156,7 +156,7 @@ export function Clinometer({ strike, dip, onComplete }: Props) {
                 <BubbleLevel error={dipError} />
                 <label className="block space-y-3">
                   <span className="flex items-center justify-between text-sm font-semibold"><span>기기 기울기</span><strong className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs">{tilt}°</strong></span>
-                  <Slider min={0} max={90} step={1} value={[tilt]} onValueChange={(value) => setTilt(value[0])} aria-label="클리노미터 경사각 조절" />
+                  <Slider min={0} max={90} step={1} value={tilt} onValueChange={setTilt} aria-label="클리노미터 경사각 조절" />
                 </label>
                 <fieldset className="space-y-2">
                   <legend className="text-xs font-semibold text-slate-600">낮아지는 경사 방향</legend>

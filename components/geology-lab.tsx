@@ -15,6 +15,8 @@ import { LAYERS, formatDipDirection, formatStrike } from '@/lib/geology';
 export function GeologyLab() {
   const [strike, setStrike] = useState(35);
   const [dip, setDip] = useState(32);
+  const [draftStrike, setDraftStrike] = useState(35);
+  const [draftDip, setDraftDip] = useState(32);
   const [sectionZ, setSectionZ] = useState(0.35);
   const [showSlice, setShowSlice] = useState(true);
   const [showAnswer, setShowAnswer] = useState(true);
@@ -72,16 +74,32 @@ export function GeologyLab() {
               <label className="space-y-3">
                 <span className="flex items-center justify-between text-sm font-semibold">
                   <span className="flex items-center gap-2"><Compass className="size-4 text-blue-600" /> 주향</span>
-                  <strong className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs text-slate-700">{formatStrike(strike)}</strong>
+                  <strong className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs text-slate-700">{formatStrike(draftStrike)}</strong>
                 </span>
-                <Slider min={0} max={179} step={1} value={[strike]} onValueChange={(value) => { setStrike(value[0]); setMeasurement(null); }} aria-label="주향 조절" />
+                <Slider
+                  min={0}
+                  max={179}
+                  step={1}
+                  value={draftStrike}
+                  onValueChange={setDraftStrike}
+                  onValueCommitted={(value) => { setStrike(value); setMeasurement(null); }}
+                  aria-label="주향 조절"
+                />
               </label>
               <label className="space-y-3">
                 <span className="flex items-center justify-between text-sm font-semibold">
                   <span className="flex items-center gap-2"><Scissors className="size-4 rotate-45 text-blue-600" /> 경사</span>
-                  <strong className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs text-slate-700">{dip}°{formatDipDirection(strike)}</strong>
+                  <strong className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs text-slate-700">{draftDip}°{formatDipDirection(draftStrike)}</strong>
                 </span>
-                <Slider min={10} max={65} step={1} value={[dip]} onValueChange={(value) => { setDip(value[0]); setMeasurement(null); }} aria-label="경사각 조절" />
+                <Slider
+                  min={10}
+                  max={65}
+                  step={1}
+                  value={draftDip}
+                  onValueChange={setDraftDip}
+                  onValueCommitted={(value) => { setDip(value); setMeasurement(null); }}
+                  aria-label="경사각 조절"
+                />
               </label>
               <div className="flex flex-wrap justify-center gap-2 md:max-w-[170px]">
                 {LAYERS.map((layer) => (
