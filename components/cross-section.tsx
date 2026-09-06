@@ -22,7 +22,7 @@ export function CrossSection({ strike, dip, sectionZ, showAnswer, onShowAnswerCh
     canvas.height = height;
     const context = canvas.getContext('2d');
     if (!context) return;
-    context.fillStyle = '#f2ede3';
+    context.fillStyle = '#f8fafc';
     context.fillRect(0, 0, width, height);
     if (showAnswer) {
       const image = context.createImageData(width, height);
@@ -38,16 +38,16 @@ export function CrossSection({ strike, dip, sectionZ, showAnswer, onShowAnswerCh
             image.data[offset + 1] = Number.parseInt(hex.slice(2, 4), 16);
             image.data[offset + 2] = Number.parseInt(hex.slice(4, 6), 16);
           } else {
-            image.data[offset] = 242;
-            image.data[offset + 1] = 237;
-            image.data[offset + 2] = 227;
+            image.data[offset] = 248;
+            image.data[offset + 1] = 250;
+            image.data[offset + 2] = 252;
           }
           image.data[offset + 3] = 255;
         }
       }
       context.putImageData(image, 0, 0);
     }
-    context.strokeStyle = 'rgba(42,60,59,.13)';
+    context.strokeStyle = 'rgba(100,116,139,.18)';
     context.lineWidth = 1;
     for (let i = 1; i < 8; i += 1) {
       context.beginPath(); context.moveTo((width * i) / 8, 0); context.lineTo((width * i) / 8, height); context.stroke();
@@ -55,7 +55,7 @@ export function CrossSection({ strike, dip, sectionZ, showAnswer, onShowAnswerCh
     for (let i = 1; i < 5; i += 1) {
       context.beginPath(); context.moveTo(0, (height * i) / 5); context.lineTo(width, (height * i) / 5); context.stroke();
     }
-    context.strokeStyle = '#233d3e';
+    context.strokeStyle = '#334155';
     context.lineWidth = 3;
     context.beginPath();
     for (let px = 0; px <= width; px += 2) {
@@ -69,10 +69,10 @@ export function CrossSection({ strike, dip, sectionZ, showAnswer, onShowAnswerCh
       context.lineJoin = 'round'; context.lineCap = 'round';
       context.beginPath();
       points.forEach((point, index) => index === 0 ? context.moveTo(point.x * width, point.y * height) : context.lineTo(point.x * width, point.y * height));
-      context.strokeStyle = '#fffdf4'; context.lineWidth = 6; context.stroke();
-      context.strokeStyle = '#d24f3f'; context.lineWidth = 2.5; context.stroke();
+      context.strokeStyle = '#ffffff'; context.lineWidth = 6; context.stroke();
+      context.strokeStyle = '#2563eb'; context.lineWidth = 2.5; context.stroke();
     }
-    context.fillStyle = '#153135'; context.font = '700 16px sans-serif';
+    context.fillStyle = '#1e293b'; context.font = '700 16px sans-serif';
     context.fillText('X', 10, 21); context.fillText('Y', width - 22, 21);
   }, [dip, points, sectionZ, showAnswer, strike]);
 
@@ -92,7 +92,7 @@ export function CrossSection({ strike, dip, sectionZ, showAnswer, onShowAnswerCh
     <div className="flex h-full flex-col gap-3">
       <canvas
         ref={canvasRef}
-        className="min-h-[190px] w-full flex-1 touch-none cursor-crosshair rounded-xl border border-[#2f4c4a]/15"
+        className="min-h-[190px] w-full flex-1 touch-none cursor-crosshair rounded-lg border border-slate-200"
         aria-label="지층 경계를 직접 그릴 수 있는 X-Y 지질 단면도"
         onPointerDown={(event) => { setDrawing(true); setPoints([]); event.currentTarget.setPointerCapture(event.pointerId); pointFromEvent(event.clientX, event.clientY); }}
         onPointerMove={(event) => drawing && pointFromEvent(event.clientX, event.clientY)}
@@ -100,7 +100,7 @@ export function CrossSection({ strike, dip, sectionZ, showAnswer, onShowAnswerCh
         onPointerCancel={() => setDrawing(false)}
       />
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-[#61716d]">경계선을 그린 뒤 정답과 비교해 보세요.</p>
+        <p className="font-mono text-[10px] uppercase tracking-wide text-slate-500">Draw boundary overlay · compare model</p>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setPoints([])} aria-label="그린 선 지우기"><RotateCcw /> 지우기</Button>
           <Button size="sm" onClick={() => onShowAnswerChange(!showAnswer)}>{showAnswer ? '정답 숨기기' : '정답 보기'}</Button>

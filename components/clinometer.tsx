@@ -38,16 +38,16 @@ function BubbleLevel({ error }: { error: number }) {
   const aligned = Math.abs(error) <= 2;
   return (
     <div className="space-y-2">
-      <div className="relative mx-auto h-9 w-[220px] overflow-hidden rounded-full border-2 border-[#30565a] bg-[#d9c765]/80 shadow-inner">
-        <span className="absolute inset-y-0 left-1/2 w-px bg-[#213d40]/45" />
-        <span className="absolute inset-y-1 left-[calc(50%-18px)] w-px bg-[#213d40]/45" />
-        <span className="absolute inset-y-1 left-[calc(50%+18px)] w-px bg-[#213d40]/45" />
+      <div className="relative mx-auto h-9 w-[220px] overflow-hidden rounded-full border-2 border-slate-300 bg-cyan-100 shadow-inner">
+        <span className="absolute inset-y-0 left-1/2 w-px bg-slate-500/45" />
+        <span className="absolute inset-y-1 left-[calc(50%-18px)] w-px bg-slate-500/45" />
+        <span className="absolute inset-y-1 left-[calc(50%+18px)] w-px bg-slate-500/45" />
         <span
-          className={`absolute left-1/2 top-1/2 h-6 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 transition-all duration-200 ${aligned ? 'border-[#174b37] bg-[#77cf88]/75 shadow-[0_0_16px_rgba(97,195,119,.7)]' : 'border-white/75 bg-white/30'}`}
+          className={`absolute left-1/2 top-1/2 h-6 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 transition-all duration-200 ${aligned ? 'border-emerald-600 bg-emerald-300/75 shadow-[0_0_16px_rgba(52,211,153,.5)]' : 'border-white bg-white/50'}`}
           style={{ marginLeft: position }}
         />
       </div>
-      <p className={`text-center text-xs font-semibold ${aligned ? 'text-[#2b6a43]' : 'text-[#72766c]'}`}>
+      <p className={`text-center text-xs font-semibold ${aligned ? 'text-emerald-700' : 'text-slate-500'}`}>
         {aligned ? '기포가 중앙에 맞았습니다' : '기기를 움직여 기포를 중앙에 맞추세요'}
       </p>
     </div>
@@ -56,35 +56,35 @@ function BubbleLevel({ error }: { error: number }) {
 
 function CompassDial({ heading }: { heading: number }) {
   return (
-    <div className="relative mx-auto aspect-square w-[min(250px,64vw)] rounded-full border-[10px] border-[#c8b38a] bg-[#f5ecd9] shadow-[0_18px_35px_rgba(24,49,51,.18),inset_0_0_0_2px_#37575a]">
-      <div className="absolute inset-3 rounded-full opacity-45 [background:repeating-conic-gradient(from_-1deg,#244649_0deg_1deg,transparent_1deg_10deg)]" />
-      <div className="absolute inset-7 rounded-full bg-[#f7f0df] shadow-[inset_0_0_24px_rgba(58,79,75,.12)]" />
-      <span className="absolute left-1/2 top-2 -translate-x-1/2 text-sm font-black text-[#ba6044]">N</span>
+    <div className="relative mx-auto aspect-square w-[min(250px,64vw)] rounded-full border-[10px] border-slate-200 bg-white shadow-[0_18px_35px_rgba(15,23,42,.12),inset_0_0_0_2px_#94a3b8]">
+      <div className="absolute inset-3 rounded-full opacity-45 [background:repeating-conic-gradient(from_-1deg,#475569_0deg_1deg,transparent_1deg_10deg)]" />
+      <div className="absolute inset-7 rounded-full bg-white shadow-[inset_0_0_24px_rgba(15,23,42,.08)]" />
+      <span className="absolute left-1/2 top-2 -translate-x-1/2 text-sm font-black text-blue-600">N</span>
       <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-sm font-black">S</span>
       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm font-black">E</span>
       <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm font-black">W</span>
       <div className="absolute left-1/2 top-1/2 h-[78%] w-5 -translate-x-1/2 -translate-y-1/2 transition-transform duration-150" style={{ transform: `translate(-50%, -50%) rotate(${heading}deg)` }}>
-        <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-full bg-[#c45f43]" />
-        <span className="absolute inset-x-0 bottom-0 h-1/2 rounded-b-full bg-[#244649]" />
+        <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-full bg-blue-600" />
+        <span className="absolute inset-x-0 bottom-0 h-1/2 rounded-b-full bg-slate-700" />
       </div>
-      <span className="absolute left-1/2 top-1/2 size-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-[#f7f0df] bg-[#244649] shadow" />
+      <span className="absolute left-1/2 top-1/2 size-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-slate-700 shadow" />
     </div>
   );
 }
 
 function DipDial({ angle }: { angle: number }) {
   return (
-    <div className="relative mx-auto h-[210px] w-[min(330px,78vw)] overflow-hidden rounded-2xl border border-[#31575a]/20 bg-[#efe5cf] shadow-inner">
-      <div className="absolute bottom-7 left-1/2 size-[250px] -translate-x-1/2 rounded-full border-2 border-[#31575a]/30 [background:repeating-conic-gradient(from_270deg,#31575a_0deg_1deg,transparent_1deg_10deg)] opacity-65" />
-      <div className="absolute bottom-7 left-1/2 size-[190px] -translate-x-1/2 rounded-full bg-[#efe5cf]" />
-      <div className="absolute bottom-7 left-1/2 h-1.5 w-[78%] -translate-x-1/2 rounded-full bg-[#294d50]" />
+    <div className="relative mx-auto h-[210px] w-[min(330px,78vw)] overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-inner">
+      <div className="absolute bottom-7 left-1/2 size-[250px] -translate-x-1/2 rounded-full border-2 border-slate-300 [background:repeating-conic-gradient(from_270deg,#64748b_0deg_1deg,transparent_1deg_10deg)] opacity-65" />
+      <div className="absolute bottom-7 left-1/2 size-[190px] -translate-x-1/2 rounded-full bg-slate-50" />
+      <div className="absolute bottom-7 left-1/2 h-1.5 w-[78%] -translate-x-1/2 rounded-full bg-slate-700" />
       <div className="absolute bottom-7 left-1/2 h-[118px] w-3 origin-bottom -translate-x-1/2 rounded-full transition-transform duration-150" style={{ transform: `translateX(-50%) rotate(${angle - 90}deg)` }}>
-        <span className="absolute inset-0 rounded-full bg-[#c45f43]" />
-        <span className="absolute -top-2 left-1/2 h-0 w-0 -translate-x-1/2 border-x-[8px] border-b-[14px] border-x-transparent border-b-[#c45f43]" />
+        <span className="absolute inset-0 rounded-full bg-blue-600" />
+        <span className="absolute -top-2 left-1/2 h-0 w-0 -translate-x-1/2 border-x-[8px] border-b-[14px] border-x-transparent border-b-blue-600" />
       </div>
-      <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-[#294d50] px-3 py-1 font-mono text-xs font-bold text-[#fff6dc]">{angle}°</span>
-      <span className="absolute bottom-10 left-3 text-[11px] font-bold text-[#6c746e]">0°</span>
-      <span className="absolute right-3 top-4 text-[11px] font-bold text-[#6c746e]">90°</span>
+      <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-md bg-slate-800 px-3 py-1 font-mono text-xs font-bold text-white">{angle}°</span>
+      <span className="absolute bottom-10 left-3 text-[11px] font-bold text-slate-500">0°</span>
+      <span className="absolute right-3 top-4 text-[11px] font-bold text-slate-500">90°</span>
     </div>
   );
 }
@@ -116,12 +116,12 @@ export function Clinometer({ strike, dip, onComplete }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(next) => { setOpen(next); if (next) reset(); }}>
-      <DialogTrigger render={<Button size="sm" className="bg-[#c56b49] text-white hover:bg-[#aa583b]" />}>
-        <Compass /> 클리노미터 측정
+      <DialogTrigger render={<Button size="sm" />}>
+        <Compass /> MEASURE
       </DialogTrigger>
-      <DialogContent className="max-h-[92vh] overflow-y-auto border-0 bg-[#f8f4e9] p-0 sm:max-w-[680px]">
-        <DialogHeader className="border-b border-[#173335]/10 px-5 pb-4 pt-5">
-          <div className="mb-1 flex items-center gap-2 text-xs font-bold text-[#ba6b45]"><Compass className="size-4" /> {progressLabel}</div>
+      <DialogContent className="max-h-[92vh] overflow-y-auto border border-slate-200 bg-white p-0 sm:max-w-[680px]">
+        <DialogHeader className="border-b border-slate-100 px-5 pb-4 pt-5">
+          <div className="mb-1 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-blue-600"><Compass className="size-4" /> {progressLabel}</div>
           <DialogTitle className="text-xl font-bold tracking-[-0.03em]">
             {step === 1 && '지층의 주향을 측정하세요'}
             {step === 2 && '지층의 경사를 측정하세요'}
@@ -141,10 +141,10 @@ export function Clinometer({ strike, dip, onComplete }: Props) {
               <div className="space-y-5">
                 <BubbleLevel error={headingError} />
                 <label className="block space-y-3">
-                  <span className="flex items-center justify-between text-sm font-semibold"><span>기기 회전</span><strong className="rounded-md bg-[#e7dfce] px-2 py-1 font-mono text-xs">{formatStrike(heading)}</strong></span>
+                  <span className="flex items-center justify-between text-sm font-semibold"><span>기기 회전</span><strong className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs">{formatStrike(heading)}</strong></span>
                   <Slider min={0} max={179} step={1} value={[heading]} onValueChange={(value) => setHeading(value[0])} aria-label="클리노미터 주향 회전" />
                 </label>
-                <p className="rounded-xl bg-[#eae4d6] p-3 text-xs leading-relaxed text-[#5b6965]">힌트: 기포가 두 기준선 사이에 들어오면 수평입니다.</p>
+                <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 font-mono text-[10px] leading-relaxed text-slate-500">LEVEL STATUS · 기포를 두 기준선 사이에 맞추세요.</p>
               </div>
             </div>
           )}
@@ -155,11 +155,11 @@ export function Clinometer({ strike, dip, onComplete }: Props) {
               <div className="space-y-5">
                 <BubbleLevel error={dipError} />
                 <label className="block space-y-3">
-                  <span className="flex items-center justify-between text-sm font-semibold"><span>기기 기울기</span><strong className="rounded-md bg-[#e7dfce] px-2 py-1 font-mono text-xs">{tilt}°</strong></span>
+                  <span className="flex items-center justify-between text-sm font-semibold"><span>기기 기울기</span><strong className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs">{tilt}°</strong></span>
                   <Slider min={0} max={90} step={1} value={[tilt]} onValueChange={(value) => setTilt(value[0])} aria-label="클리노미터 경사각 조절" />
                 </label>
                 <fieldset className="space-y-2">
-                  <legend className="text-xs font-semibold text-[#596965]">낮아지는 경사 방향</legend>
+                  <legend className="text-xs font-semibold text-slate-600">낮아지는 경사 방향</legend>
                   <div className="grid grid-cols-4 gap-1.5">
                     {DIRECTIONS.map((value) => (
                       <Button key={value} type="button" size="sm" variant={direction === value ? 'default' : 'outline'} onClick={() => setDirection(value)}>{value}</Button>
@@ -172,12 +172,12 @@ export function Clinometer({ strike, dip, onComplete }: Props) {
 
           {step === 3 && (
             <div className="py-4 text-center">
-              <div className="mx-auto mb-5 grid size-16 place-items-center rounded-full bg-[#dcecd8] text-[#2c6840]"><Check className="size-8" /></div>
-              <p className="text-sm text-[#697570]">노두 A 측정 결과</p>
-              <p className="mt-2 text-3xl font-black tracking-[-0.04em] text-[#173b3c]">{formatStrike(heading)}, {tilt}°{direction}</p>
+              <div className="mx-auto mb-5 grid size-16 place-items-center rounded-full bg-blue-50 text-blue-600"><Check className="size-8" /></div>
+              <p className="font-mono text-xs uppercase tracking-wider text-slate-500">Measurement · point A</p>
+              <p className="mt-2 text-3xl font-black tracking-[-0.04em] text-slate-900">{formatStrike(heading)}, {tilt}°{direction}</p>
               <div className="mx-auto mt-6 grid max-w-md grid-cols-2 gap-3 text-left">
-                <div className="rounded-xl bg-[#ece5d6] p-4"><p className="text-xs text-[#6b756f]">주향</p><p className="mt-1 font-mono font-bold">{formatStrike(heading)}</p></div>
-                <div className="rounded-xl bg-[#ece5d6] p-4"><p className="text-xs text-[#6b756f]">경사</p><p className="mt-1 font-mono font-bold">{tilt}°{direction}</p></div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4"><p className="font-mono text-[10px] uppercase text-slate-500">Strike</p><p className="mt-1 font-mono font-bold">{formatStrike(heading)}</p></div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4"><p className="font-mono text-[10px] uppercase text-slate-500">Dip</p><p className="mt-1 font-mono font-bold">{tilt}°{direction}</p></div>
               </div>
             </div>
           )}

@@ -127,7 +127,7 @@ export function GeologyScene({ strike, dip, sectionZ, showSlice }: Props) {
     const mount = mountRef.current;
     if (!mount) return;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#112a2d');
+    scene.background = new THREE.Color('#f4f6f8');
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
     camera.position.set(8.2, 6.5, 8.7);
     camera.lookAt(0, -0.1, 0);
@@ -143,8 +143,8 @@ export function GeologyScene({ strike, dip, sectionZ, showSlice }: Props) {
     controls.minDistance = 7;
     controls.maxDistance = 19;
     controls.maxPolarAngle = Math.PI * 0.49;
-    scene.add(new THREE.HemisphereLight('#e9f1d8', '#274147', 2.15));
-    const sun = new THREE.DirectionalLight('#fff4d1', 2.6);
+    scene.add(new THREE.HemisphereLight('#ffffff', '#94a3b8', 2.35));
+    const sun = new THREE.DirectionalLight('#ffffff', 2.75);
     sun.position.set(-6, 10, 7);
     scene.add(sun);
 
@@ -167,10 +167,10 @@ export function GeologyScene({ strike, dip, sectionZ, showSlice }: Props) {
         const x = BOUNDS.minX + ((BOUNDS.maxX - BOUNDS.minX) * index) / 89;
         return new THREE.Vector3(x, surfaceHeight(x, sectionZ) + 0.012, sectionZ);
       });
-      topLineMaterial = new THREE.LineBasicMaterial({ color: '#fff3c4' });
+      topLineMaterial = new THREE.LineBasicMaterial({ color: '#2563eb' });
       scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), topLineMaterial));
     }
-    const grid = new THREE.GridHelper(12, 12, '#44676a', '#29474a');
+    const grid = new THREE.GridHelper(12, 12, '#cbd5e1', '#e2e8f0');
     grid.position.y = BOUNDS.bottom - 0.03;
     scene.add(grid);
 
@@ -208,13 +208,13 @@ export function GeologyScene({ strike, dip, sectionZ, showSlice }: Props) {
   }, [strike, dip, sectionZ, showSlice]);
 
   return (
-    <div className="relative h-full min-h-[430px] overflow-hidden rounded-[22px] bg-[#112a2d]">
+    <div className="relative h-full min-h-[430px] overflow-hidden rounded-xl border border-slate-200 bg-[#f4f6f8]">
       <div ref={mountRef} className="absolute inset-0" aria-label="회전 가능한 다층 3D 지질 모형" />
-      <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/15 bg-[#0d2225]/75 px-3 py-1.5 text-[11px] font-semibold tracking-wide text-white/80 backdrop-blur">드래그하여 회전 · 스크롤하여 확대</div>
-      <div className="pointer-events-none absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-[#0d2225]/80 text-white shadow-lg backdrop-blur">
+      <div className="pointer-events-none absolute left-4 top-4 rounded-md border border-slate-200 bg-white/90 px-3 py-1.5 text-[11px] font-medium tracking-wide text-slate-500 shadow-sm backdrop-blur">ORBIT · ZOOM</div>
+      <div className="pointer-events-none absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 shadow-sm backdrop-blur">
         <span className="absolute top-1 text-[10px] font-bold">N</span>
-        <span className="h-7 w-px -translate-y-0.5 bg-[#e9c96f]" />
-        <span className="absolute top-4 h-0 w-0 border-x-[4px] border-b-[9px] border-x-transparent border-b-[#e9c96f]" />
+        <span className="h-7 w-px -translate-y-0.5 bg-blue-600" />
+        <span className="absolute top-4 h-0 w-0 border-x-[4px] border-b-[9px] border-x-transparent border-b-blue-600" />
       </div>
     </div>
   );

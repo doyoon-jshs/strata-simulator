@@ -6,17 +6,17 @@ const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: '지층 탐사실 | 3D 지질 가상실험',
-  description: '다층 3D 지질 모형을 관찰하고 주향·경사와 지질 단면도를 연결하는 가상실험입니다.',
+  title: '지질 구조 시뮬레이터 | STRATA 3D',
+  description: '다층 3D 지질 구조와 주향·경사, 지질 단면을 실시간으로 시뮬레이션합니다.',
   openGraph: {
-    title: '지층 탐사실',
-    description: '3D 지질 가상실험',
-    images: [{ url: '/og.png', width: 1536, height: 1024, alt: '지층 탐사실 3D 지질 가상실험' }],
+    title: '지질 구조 시뮬레이터',
+    description: 'STRATA 3D',
+    images: [{ url: '/og.png', width: 1536, height: 1024, alt: '지질 구조 시뮬레이터 STRATA 3D' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '지층 탐사실',
-    description: '3D 지질 가상실험',
+    title: '지질 구조 시뮬레이터',
+    description: 'STRATA 3D',
     images: ['/og.png'],
   },
 };

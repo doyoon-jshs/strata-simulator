@@ -52,22 +52,22 @@ export function GeologyMap({ strike, dip, sectionZ, onSectionChange }: Props) {
     context.moveTo(28, lineY);
     context.lineTo(width - 28, lineY);
     context.stroke();
-    context.fillStyle = '#153135';
+    context.fillStyle = '#1e293b';
     context.font = '700 22px sans-serif';
     context.textAlign = 'center';
     for (const [label, x] of [['X', 18], ['Y', width - 18]] as const) {
       context.beginPath();
       context.arc(x, lineY, 15, 0, Math.PI * 2);
       context.fill();
-      context.fillStyle = '#fff8dc';
+      context.fillStyle = '#ffffff';
       context.fillText(label, x, lineY + 7);
-      context.fillStyle = '#153135';
+      context.fillStyle = '#1e293b';
     }
-    context.fillStyle = 'rgba(16,42,45,.88)';
+    context.fillStyle = 'rgba(30,41,59,.9)';
     context.beginPath();
     context.roundRect(width - 67, 15, 48, 62, 14);
     context.fill();
-    context.fillStyle = '#fff8dc';
+    context.fillStyle = '#ffffff';
     context.font = '700 17px sans-serif';
     context.fillText('N', width - 43, 39);
     context.beginPath();
@@ -89,7 +89,7 @@ export function GeologyMap({ strike, dip, sectionZ, onSectionChange }: Props) {
   return (
     <canvas
       ref={canvasRef}
-      className="h-full min-h-[210px] w-full cursor-ns-resize rounded-xl object-cover"
+      className="h-full min-h-[210px] w-full cursor-ns-resize rounded-lg border border-slate-200 object-cover"
       aria-label="단면선 X-Y를 위아래로 이동할 수 있는 지질도"
       onPointerDown={(event) => {
         setDragging(true);
