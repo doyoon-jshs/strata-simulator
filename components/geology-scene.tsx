@@ -127,6 +127,7 @@ function sliceGeometry(sectionZ: number, strike: number, dip: number, terrain: T
 
 export function GeologyScene({ strike, dip, sectionZ, terrain }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const cameraViewRef = useRef<{ position: THREE.Vector3; target: THREE.Vector3 } | null>(null);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -134,8 +135,9 @@ export function GeologyScene({ strike, dip, sectionZ, terrain }: Props) {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#f4f6f8');
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-    camera.position.set(8.2, 6.5, 8.7);
-    camera.lookAt(0, -0.1, 0);
+    const savedView = cameraViewRef.current;
+    if (savedView) camera.position.copy(savedView.position);
+    else camera.position.set(8.2, 6.5, 8.7);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -144,10 +146,12 @@ export function GeologyScene({ strike, dip, sectionZ, terrain }: Props) {
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.target.set(0, -0.2, 0);
+    if (savedView) controls.target.copy(savedView.target);
+    else controls.target.set(0, -0.2, 0);
     controls.minDistance = 7;
     controls.maxDistance = 34;
     controls.maxPolarAngle = Math.PI * 0.49;
+    controls.update();
     scene.add(new THREE.HemisphereLight('#ffffff', '#94a3b8', 2.35));
     const sun = new THREE.DirectionalLight('#ffffff', 2.75);
     sun.position.set(-6, 10, 7);
@@ -195,6 +199,10 @@ export function GeologyScene({ strike, dip, sectionZ, terrain }: Props) {
     animate();
 
     return () => {
+      cameraViewRef.current = {
+        position: camera.position.clone(),
+        target: controls.target.clone(),
+      };
       cancelAnimationFrame(frame);
       observer.disconnect();
       controls.dispose();
