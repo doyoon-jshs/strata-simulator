@@ -132,8 +132,8 @@ export function CrossSection({ strike, dip, sectionZ, terrain, structure, geolog
 
     context.fillStyle = '#1e293b';
     context.font = '700 16px sans-serif';
-    context.fillText('X', 10, 21);
-    context.fillText('Y', width - 22, 21);
+    context.fillText('Y', 10, 21);
+    context.fillText('X', width - 22, 21);
   }, [dip, sectionZ, strike, terrain, structure, geologyOffset, faultDip, unconformityDip, layers, boundaries]);
 
   return (

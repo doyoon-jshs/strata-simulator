@@ -30,7 +30,7 @@ type Props = {
 
 export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyOffset, faultDip, unconformityDip, layers, boundaries, onSectionChange }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [marker, setMarker] = useState<{ x: number; z: number } | null>(null);
+  const [markers, setMarkers] = useState<Array<{ x: number; z: number }>>([]);
   const draggingRef = useRef(false);
   const draggedRef = useRef(false);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -117,7 +117,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
     context.fillStyle = '#1e293b';
     context.font = '700 22px sans-serif';
     context.textAlign = 'center';
-    for (const [label, x] of [['X', 18], ['Y', width - 18]] as const) {
+    for (const [label, x] of [['Y', 18], ['X', width - 18]] as const) {
       context.beginPath();
       context.arc(x, lineY, 15, 0, Math.PI * 2);
       context.fill();
@@ -126,7 +126,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
       context.fillStyle = '#1e293b';
     }
 
-    if (marker) {
+    for (const marker of markers) {
       context.save();
       const centerX = ((marker.x - BOUNDS.minX) / (BOUNDS.maxX - BOUNDS.minX)) * width;
       const centerY = worldToMap(marker.z, height);
@@ -206,7 +206,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
     context.lineTo(width - 34, 65);
     context.closePath();
     context.fill();
-  }, [strike, dip, sectionZ, terrain, structure, geologyOffset, faultDip, unconformityDip, layers, boundaries, marker]);
+  }, [strike, dip, sectionZ, terrain, structure, geologyOffset, faultDip, unconformityDip, layers, boundaries, markers]);
 
   const updateFromPointer = (clientY: number) => {
     const canvas = canvasRef.current;
@@ -224,14 +224,14 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
     const py = ((clientY - rect.top) / rect.height) * canvas.height;
     const x = BOUNDS.minX + (Math.max(0, Math.min(canvas.width, px)) / canvas.width) * (BOUNDS.maxX - BOUNDS.minX);
     const z = mapToWorldZ(Math.max(0, Math.min(canvas.height, py)), canvas.height);
-    setMarker({ x, z });
+    setMarkers((current) => [...current, { x, z }]);
   };
 
   return (
     <canvas
       ref={canvasRef}
       className="h-full min-h-[250px] w-full cursor-crosshair rounded-lg border border-slate-200 object-cover lg:min-h-0"
-      aria-label="클릭하면 주향과 경사 기호를 표시하고, 드래그하면 단면선 X-Y를 이동할 수 있는 지질도"
+      aria-label="클릭할 때마다 주향과 경사 기호를 추가하고, 드래그하면 단면선 X-Y를 이동할 수 있는 지질도"
       onPointerDown={(event) => {
         draggingRef.current = true;
         draggedRef.current = false;
