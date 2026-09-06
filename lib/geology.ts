@@ -75,7 +75,10 @@ export const TERRAIN_PRESETS = [
   { id: 'uniform-slope', label: '일정 경사면' },
   { id: 'curved-slope', label: '굴곡 경사면' },
   { id: 'incised-slope', label: '하곡 경사면' },
-  { id: 'conical-hill', label: '원추형 산지' },
+  { id: 'cone', label: '원뿔산' },
+  { id: 'u-valley', label: 'U자 계곡' },
+  { id: 'twin-saddle', label: '쌍봉 안부' },
+  { id: 'conical-hill', label: '둥근 구릉' },
   { id: 'saddle', label: '안부' },
   { id: 'dissected', label: '침식 산지' },
 ] as const;
@@ -120,6 +123,24 @@ export function surfaceHeight(x: number, z: number, terrain: TerrainPreset = 'ri
     const channelAxis = x - 0.34 * Math.sin(z * 0.78);
     const channel = 0.3 * Math.exp(-(channelAxis ** 2) / 0.28);
     return 0.58 + 0.14 * x + 0.03 * z - channel;
+  }
+
+  if (terrain === 'cone') {
+    const radius = Math.hypot((x - 0.12) / 3.35, (z + 0.08) / 2.55);
+    return 0.1 + 1.34 * Math.max(0, 1 - radius);
+  }
+
+  if (terrain === 'u-valley') {
+    const valleyAxis = x - 0.28 * Math.sin(z * 0.72);
+    const valleyWall = 0.68 * (1 - Math.exp(-(valleyAxis ** 2) / 1.05));
+    return 0.12 + valleyWall + 0.045 * z;
+  }
+
+  if (terrain === 'twin-saddle') {
+    const westPeak = 1.06 * hill(x, z, -1.82, 0, 1.12, 1.45);
+    const eastPeak = 1.06 * hill(x, z, 1.82, 0, 1.12, 1.45);
+    const saddleNotch = 0.12 * hill(x, z, 0, 0, 0.9, 1.35);
+    return 0.15 + westPeak + eastPeak - saddleNotch + 0.025 * z;
   }
 
   if (terrain === 'conical-hill') {
