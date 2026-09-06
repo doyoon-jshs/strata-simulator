@@ -9,6 +9,7 @@ const isProjectPage = process.env.GITHUB_ACTIONS === 'true' && repositoryName &&
 const assetPrefix = isProjectPage ? `/${repositoryName}` : '';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://doyoon-jshs.github.io'),
   title: '지질 구조 시뮬레이터 | STRATA 3D',
   description: '다층 3D 지질 구조와 주향·경사, 지질 단면을 실시간으로 시뮬레이션합니다.',
   openGraph: {
