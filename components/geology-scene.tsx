@@ -12,7 +12,6 @@ type Props = {
   terrain: TerrainPreset;
   layers: readonly GeologyLayer[];
   boundaries: readonly number[];
-  layerSpacing: number;
 };
 
 function pushTriangle(
@@ -128,7 +127,7 @@ function sliceGeometry(sectionZ: number, strike: number, dip: number, terrain: T
   return makeGeometry(positions, colors);
 }
 
-export function GeologyScene({ strike, dip, sectionZ, terrain, layers, boundaries, layerSpacing }: Props) {
+export function GeologyScene({ strike, dip, sectionZ, terrain, layers, boundaries }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const cameraViewRef = useRef<{ position: THREE.Vector3; target: THREE.Vector3 } | null>(null);
 
@@ -225,20 +224,6 @@ export function GeologyScene({ strike, dip, sectionZ, terrain, layers, boundarie
     <div className="relative h-full min-h-[440px] overflow-hidden rounded-xl border border-slate-200 bg-[#f4f6f8] lg:min-h-0">
       <div ref={mountRef} className="absolute inset-0" aria-label="회전 가능한 다층 3D 지질 모형" />
       <div className="pointer-events-none absolute left-4 top-4 rounded-md border border-slate-200 bg-white/95 px-3 py-1.5 font-mono text-[10px] font-semibold tracking-wide text-slate-600 shadow-sm backdrop-blur">DRAG TO ORBIT · SCROLL TO ZOOM</div>
-      <div className="pointer-events-none absolute bottom-4 left-4 w-32 rounded-lg border border-slate-200 bg-white/95 p-2.5 shadow-sm backdrop-blur">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500">지질 주상도</span>
-          <span className="font-mono text-[9px] text-blue-600">{layers.length}층</span>
-        </div>
-        <div className="overflow-hidden rounded border border-slate-300">
-          {layers.map((layer) => (
-            <div key={layer.short} className="flex h-5 items-center justify-between px-1.5 text-[9px] font-semibold text-slate-900" style={{ backgroundColor: layer.color }}>
-              <span>{layer.short}</span><span>{layer.name.replace(` ${layer.short}`, '')}</span>
-            </div>
-          ))}
-        </div>
-        <p className="mt-1.5 font-mono text-[9px] text-slate-500">층 간격 {Math.round(layerSpacing * 100)} m</p>
-      </div>
       <div className="pointer-events-none absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 shadow-sm backdrop-blur">
         <span className="absolute top-1 text-[10px] font-bold">N</span>
         <span className="h-7 w-px -translate-y-0.5 bg-blue-600" />
