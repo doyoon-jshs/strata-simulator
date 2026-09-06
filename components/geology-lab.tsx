@@ -51,7 +51,7 @@ export function GeologyLab() {
   const [layerSpacing, setLayerSpacing] = useState(0.63);
   const [rockSuite, setRockSuite] = useState<RockSuite>('mixed');
   const [sectionZ, setSectionZ] = useState(0.35);
-  const [terrain, setTerrain] = useState<TerrainPreset>('ridge-valley');
+  const [terrain, setTerrain] = useState<TerrainPreset>('ridge');
   const [structure, setStructure] = useState<GeologicStructure>('tilted');
   const [geologyOffset, setGeologyOffset] = useState(0);
   const [faultDip, setFaultDip] = useState(70);
