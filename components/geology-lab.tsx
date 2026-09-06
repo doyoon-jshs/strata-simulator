@@ -157,7 +157,7 @@ export function GeologyLab() {
               <Card className="flex min-h-0 flex-col border border-slate-200 bg-white shadow-sm ring-0">
                 <CardHeader className="border-b border-slate-100">
                   <div><p className="mb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-600">Map view</p><CardTitle className="font-bold">지질 평면도</CardTitle></div>
-                  <CardAction><Badge variant="outline" className="border-slate-200 bg-slate-50 font-mono text-[10px] text-slate-500">DRAG X–Y</Badge></CardAction>
+                  <CardAction><Badge variant="outline" className="border-slate-200 bg-slate-50 font-mono text-[10px] text-slate-500">CLICK SYMBOL · DRAG X–Y</Badge></CardAction>
                 </CardHeader>
                 <CardContent className="flex min-h-0 flex-1 px-3">
                   <GeologyMap strike={strike} dip={dip} sectionZ={sectionZ} terrain={terrain} structure={structure} geologyOffset={geologyOffset} faultDip={faultDip} unconformityDip={unconformityDip} layers={layers} boundaries={boundaries} onSectionChange={setSectionZ} />

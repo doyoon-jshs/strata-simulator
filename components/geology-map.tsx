@@ -29,7 +29,10 @@ type Props = {
 
 export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyOffset, faultDip, unconformityDip, layers, boundaries, onSectionChange }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [dragging, setDragging] = useState(false);
+  const [marker, setMarker] = useState<{ x: number; z: number } | null>(null);
+  const draggingRef = useRef(false);
+  const draggedRef = useRef(false);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -121,6 +124,63 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
       context.fillText(label, x, lineY + 7);
       context.fillStyle = '#1e293b';
     }
+
+    if (marker) {
+      context.save();
+      const centerX = ((marker.x - BOUNDS.minX) / (BOUNDS.maxX - BOUNDS.minX)) * width;
+      const centerY = worldToMap(marker.z, height);
+      const strikeRadians = (strike * Math.PI) / 180;
+      const strikeX = Math.sin(strikeRadians);
+      const strikeY = -Math.cos(strikeRadians);
+      const dipRadians = strikeRadians + Math.PI / 2;
+      const dipX = Math.sin(dipRadians);
+      const dipY = -Math.cos(dipRadians);
+
+      const drawSymbolPath = () => {
+        context.beginPath();
+        if (dip === 0) {
+          context.arc(centerX, centerY, 10, 0, Math.PI * 2);
+          context.moveTo(centerX - 7, centerY);
+          context.lineTo(centerX + 7, centerY);
+          context.moveTo(centerX, centerY - 7);
+          context.lineTo(centerX, centerY + 7);
+          return;
+        }
+
+        const halfStrike = 18;
+        context.moveTo(centerX - strikeX * halfStrike, centerY - strikeY * halfStrike);
+        context.lineTo(centerX + strikeX * halfStrike, centerY + strikeY * halfStrike);
+        context.moveTo(centerX, centerY);
+        context.lineTo(centerX + dipX * 12, centerY + dipY * 12);
+      };
+
+      context.setLineDash([]);
+      context.lineCap = 'round';
+      context.lineJoin = 'round';
+      context.strokeStyle = 'rgba(255,255,255,.96)';
+      context.lineWidth = 6;
+      drawSymbolPath();
+      context.stroke();
+      context.strokeStyle = '#0f172a';
+      context.lineWidth = 2.5;
+      drawSymbolPath();
+      context.stroke();
+
+      if (dip > 0) {
+        const labelX = centerX + dipX * 23;
+        const labelY = centerY + dipY * 23;
+        context.font = '700 15px sans-serif';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.lineWidth = 4;
+        context.strokeStyle = 'rgba(255,255,255,.96)';
+        context.strokeText(`${Math.round(dip)}°`, labelX, labelY);
+        context.fillStyle = '#0f172a';
+        context.fillText(`${Math.round(dip)}°`, labelX, labelY);
+      }
+      context.restore();
+    }
+
     context.fillStyle = 'rgba(30,41,59,.9)';
     context.beginPath();
     context.roundRect(width - 67, 15, 48, 62, 14);
@@ -134,7 +194,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
     context.lineTo(width - 34, 65);
     context.closePath();
     context.fill();
-  }, [strike, dip, sectionZ, terrain, structure, geologyOffset, faultDip, unconformityDip, layers, boundaries]);
+  }, [strike, dip, sectionZ, terrain, structure, geologyOffset, faultDip, unconformityDip, layers, boundaries, marker]);
 
   const updateFromPointer = (clientY: number) => {
     const canvas = canvasRef.current;
@@ -144,19 +204,43 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
     onSectionChange(Number(mapToWorldZ(Math.max(0, Math.min(canvas.height, localY)), canvas.height).toFixed(2)));
   };
 
+  const placeMarker = (clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const px = ((clientX - rect.left) / rect.width) * canvas.width;
+    const py = ((clientY - rect.top) / rect.height) * canvas.height;
+    const x = BOUNDS.minX + (Math.max(0, Math.min(canvas.width, px)) / canvas.width) * (BOUNDS.maxX - BOUNDS.minX);
+    const z = mapToWorldZ(Math.max(0, Math.min(canvas.height, py)), canvas.height);
+    setMarker({ x, z });
+  };
+
   return (
     <canvas
       ref={canvasRef}
-      className="h-full min-h-[250px] w-full cursor-ns-resize rounded-lg border border-slate-200 object-cover lg:min-h-0"
-      aria-label="단면선 X-Y를 위아래로 이동할 수 있는 지질도"
+      className="h-full min-h-[250px] w-full cursor-crosshair rounded-lg border border-slate-200 object-cover lg:min-h-0"
+      aria-label="클릭하면 주향과 경사 기호를 표시하고, 드래그하면 단면선 X-Y를 이동할 수 있는 지질도"
       onPointerDown={(event) => {
-        setDragging(true);
+        draggingRef.current = true;
+        draggedRef.current = false;
+        pointerStartRef.current = { x: event.clientX, y: event.clientY };
         event.currentTarget.setPointerCapture(event.pointerId);
-        updateFromPointer(event.clientY);
       }}
-      onPointerMove={(event) => dragging && updateFromPointer(event.clientY)}
-      onPointerUp={() => setDragging(false)}
-      onPointerCancel={() => setDragging(false)}
+      onPointerMove={(event) => {
+        if (!draggingRef.current || !pointerStartRef.current) return;
+        const distance = Math.hypot(event.clientX - pointerStartRef.current.x, event.clientY - pointerStartRef.current.y);
+        if (distance >= 6) draggedRef.current = true;
+        if (draggedRef.current) updateFromPointer(event.clientY);
+      }}
+      onPointerUp={(event) => {
+        if (!draggedRef.current) placeMarker(event.clientX, event.clientY);
+        draggingRef.current = false;
+        pointerStartRef.current = null;
+      }}
+      onPointerCancel={() => {
+        draggingRef.current = false;
+        pointerStartRef.current = null;
+      }}
     />
   );
 }
