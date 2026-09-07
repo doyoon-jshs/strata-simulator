@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { RotateCcw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   BOUNDS,
   beddingOrientationAt,
@@ -200,19 +202,6 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
       context.restore();
     }
 
-    context.fillStyle = 'rgba(30,41,59,.9)';
-    context.beginPath();
-    context.roundRect(width - 67, 15, 48, 62, 14);
-    context.fill();
-    context.fillStyle = '#ffffff';
-    context.font = '700 17px sans-serif';
-    context.fillText('N', width - 43, 39);
-    context.beginPath();
-    context.moveTo(width - 43, 47);
-    context.lineTo(width - 52, 65);
-    context.lineTo(width - 34, 65);
-    context.closePath();
-    context.fill();
   }, [strike, dip, sectionZ, terrain, structure, geologyOffset, faultDip, unconformityDip, layers, boundaries, markers]);
 
   const updateFromPointer = (clientY: number) => {
@@ -259,37 +248,50 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
   };
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="h-full min-h-[250px] w-full cursor-crosshair rounded-lg border border-slate-200 object-cover lg:min-h-0"
-      aria-label="클릭할 때마다 주향과 경사 기호를 추가하고, 기호를 우클릭하면 삭제하며, 드래그하면 단면선 X-Y를 이동할 수 있는 지질도"
-      onPointerDown={(event) => {
-        if (event.button !== 0) return;
-        draggingRef.current = true;
-        draggedRef.current = false;
-        pointerStartRef.current = { x: event.clientX, y: event.clientY };
-        event.currentTarget.setPointerCapture(event.pointerId);
-      }}
-      onPointerMove={(event) => {
-        if (!draggingRef.current || !pointerStartRef.current) return;
-        const distance = Math.hypot(event.clientX - pointerStartRef.current.x, event.clientY - pointerStartRef.current.y);
-        if (distance >= 6) draggedRef.current = true;
-        if (draggedRef.current) updateFromPointer(event.clientY);
-      }}
-      onPointerUp={(event) => {
-        if (!draggingRef.current) return;
-        if (!draggedRef.current) placeMarker(event.clientX, event.clientY);
-        draggingRef.current = false;
-        pointerStartRef.current = null;
-      }}
-      onPointerCancel={() => {
-        draggingRef.current = false;
-        pointerStartRef.current = null;
-      }}
-      onContextMenu={(event) => {
-        event.preventDefault();
-        removeMarker(event.clientX, event.clientY);
-      }}
-    />
+    <div className="relative h-full min-h-[250px] w-full lg:min-h-0">
+      <canvas
+        ref={canvasRef}
+        className="block h-full min-h-[250px] w-full cursor-crosshair rounded-lg border border-slate-200 object-cover lg:min-h-0"
+        aria-label="클릭할 때마다 주향과 경사 기호를 추가하고, 기호를 우클릭하면 삭제하며, 드래그하면 단면선 X-Y를 이동할 수 있는 지질도"
+        onPointerDown={(event) => {
+          if (event.button !== 0) return;
+          draggingRef.current = true;
+          draggedRef.current = false;
+          pointerStartRef.current = { x: event.clientX, y: event.clientY };
+          event.currentTarget.setPointerCapture(event.pointerId);
+        }}
+        onPointerMove={(event) => {
+          if (!draggingRef.current || !pointerStartRef.current) return;
+          const distance = Math.hypot(event.clientX - pointerStartRef.current.x, event.clientY - pointerStartRef.current.y);
+          if (distance >= 6) draggedRef.current = true;
+          if (draggedRef.current) updateFromPointer(event.clientY);
+        }}
+        onPointerUp={(event) => {
+          if (!draggingRef.current) return;
+          if (!draggedRef.current) placeMarker(event.clientX, event.clientY);
+          draggingRef.current = false;
+          pointerStartRef.current = null;
+        }}
+        onPointerCancel={() => {
+          draggingRef.current = false;
+          pointerStartRef.current = null;
+        }}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          removeMarker(event.clientX, event.clientY);
+        }}
+      />
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        className="absolute right-3 top-3 border border-white/80 bg-white/95 text-slate-700 shadow-sm hover:bg-white"
+        onClick={() => setMarkers([])}
+        disabled={markers.length === 0}
+      >
+        <RotateCcw aria-hidden="true" />
+        주향·경사 초기화
+      </Button>
+    </div>
   );
 }
