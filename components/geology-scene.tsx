@@ -38,6 +38,33 @@ function makeGeometry(positions: number[], colors: number[]) {
   return geometry;
 }
 
+function endpointSprite(label: string) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 96;
+  canvas.height = 96;
+  const context = canvas.getContext('2d');
+  if (context) {
+    context.fillStyle = '#1e293b';
+    context.beginPath();
+    context.arc(48, 48, 38, 0, Math.PI * 2);
+    context.fill();
+    context.strokeStyle = '#ffffff';
+    context.lineWidth = 5;
+    context.stroke();
+    context.fillStyle = '#ffffff';
+    context.font = '700 46px sans-serif';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(label, 48, 51);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(0.48, 0.48, 1);
+  return sprite;
+}
+
 function terrainGeometry(strike: number, dip: number, terrain: TerrainPreset, structure: GeologicStructure, geologyOffset: number, faultDip: number, unconformityDip: number, layers: readonly GeologyLayer[], boundaries: readonly number[]) {
   const positions: number[] = [];
   const colors: number[] = [];
@@ -183,6 +210,16 @@ export function GeologyScene({ strike, dip, sectionZ, terrain, structure, geolog
     });
     const topLineMaterial = new THREE.LineBasicMaterial({ color: '#2563eb' });
     scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), topLineMaterial));
+    const sectionEndpoints = [
+      { label: 'Y', x: BOUNDS.minX },
+      { label: 'X', x: BOUNDS.maxX },
+    ].map(({ label, x }) => {
+      const sprite = endpointSprite(label);
+      sprite.position.set(x, surfaceHeight(x, sectionZ, terrain) + 0.25, sectionZ);
+      sprite.renderOrder = 10;
+      scene.add(sprite);
+      return sprite;
+    });
     let structureMaterial: THREE.MeshBasicMaterial | null = null;
     if (structure === 'fault') {
       structureMaterial = new THREE.MeshBasicMaterial({ color: '#1e293b', transparent: true, opacity: 0.2, side: THREE.DoubleSide, depthWrite: false });
@@ -234,6 +271,10 @@ export function GeologyScene({ strike, dip, sectionZ, terrain, structure, geolog
       wallMaterial.dispose();
       sliceMaterial.dispose();
       topLineMaterial?.dispose();
+      for (const sprite of sectionEndpoints) {
+        sprite.material.map?.dispose();
+        sprite.material.dispose();
+      }
       structureMaterial?.dispose();
       renderer.dispose();
       renderer.domElement.remove();

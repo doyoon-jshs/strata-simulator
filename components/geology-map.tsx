@@ -227,12 +227,37 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
     setMarkers((current) => [...current, { x, z }]);
   };
 
+  const removeMarker = (clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas || markers.length === 0) return;
+    const rect = canvas.getBoundingClientRect();
+    const pointerX = ((clientX - rect.left) / rect.width) * canvas.width;
+    const pointerY = ((clientY - rect.top) / rect.height) * canvas.height;
+    let nearestIndex = -1;
+    let nearestDistance = 30;
+
+    markers.forEach((marker, index) => {
+      const markerX = ((marker.x - BOUNDS.minX) / (BOUNDS.maxX - BOUNDS.minX)) * canvas.width;
+      const markerY = worldToMap(marker.z, canvas.height);
+      const distance = Math.hypot(pointerX - markerX, pointerY - markerY);
+      if (distance < nearestDistance) {
+        nearestIndex = index;
+        nearestDistance = distance;
+      }
+    });
+
+    if (nearestIndex >= 0) {
+      setMarkers((current) => current.filter((_, index) => index !== nearestIndex));
+    }
+  };
+
   return (
     <canvas
       ref={canvasRef}
       className="h-full min-h-[250px] w-full cursor-crosshair rounded-lg border border-slate-200 object-cover lg:min-h-0"
-      aria-label="클릭할 때마다 주향과 경사 기호를 추가하고, 드래그하면 단면선 X-Y를 이동할 수 있는 지질도"
+      aria-label="클릭할 때마다 주향과 경사 기호를 추가하고, 기호를 우클릭하면 삭제하며, 드래그하면 단면선 X-Y를 이동할 수 있는 지질도"
       onPointerDown={(event) => {
+        if (event.button !== 0) return;
         draggingRef.current = true;
         draggedRef.current = false;
         pointerStartRef.current = { x: event.clientX, y: event.clientY };
@@ -245,6 +270,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
         if (draggedRef.current) updateFromPointer(event.clientY);
       }}
       onPointerUp={(event) => {
+        if (!draggingRef.current) return;
         if (!draggedRef.current) placeMarker(event.clientX, event.clientY);
         draggingRef.current = false;
         pointerStartRef.current = null;
@@ -252,6 +278,10 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
       onPointerCancel={() => {
         draggingRef.current = false;
         pointerStartRef.current = null;
+      }}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        removeMarker(event.clientX, event.clientY);
       }}
     />
   );
