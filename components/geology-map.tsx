@@ -28,6 +28,14 @@ type Props = {
   onSectionChange: (value: number) => void;
 };
 
+function worldToMapX(x: number, width: number) {
+  return ((BOUNDS.maxX - x) / (BOUNDS.maxX - BOUNDS.minX)) * width;
+}
+
+function mapToWorldX(px: number, width: number) {
+  return BOUNDS.maxX - (px / width) * (BOUNDS.maxX - BOUNDS.minX);
+}
+
 export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyOffset, faultDip, unconformityDip, layers, boundaries, onSectionChange }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [markers, setMarkers] = useState<Array<{ x: number; z: number }>>([]);
@@ -47,7 +55,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
     const image = context.createImageData(width, height);
     for (let py = 0; py < height; py += 1) {
       for (let px = 0; px < width; px += 1) {
-        const x = BOUNDS.minX + (px / width) * (BOUNDS.maxX - BOUNDS.minX);
+        const x = mapToWorldX(px, width);
         const z = BOUNDS.maxZ - (py / height) * (BOUNDS.maxZ - BOUNDS.minZ);
         const y = surfaceHeight(x, z, terrain);
         const layer = layers[layerIndexAt(x, y, z, strike, dip, boundaries, structure, geologyOffset, faultDip, unconformityDip)];
@@ -55,7 +63,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
         let r = Number.parseInt(hex.slice(0, 2), 16);
         let g = Number.parseInt(hex.slice(2, 4), 16);
         let b = Number.parseInt(hex.slice(4, 6), 16);
-        const neighborX = surfaceHeight(x + 0.018, z, terrain);
+        const neighborX = surfaceHeight(x - 0.018, z, terrain);
         const neighborZ = surfaceHeight(x, z + 0.018, terrain);
         const contour = Math.floor(y / 0.14) !== Math.floor(neighborX / 0.14) || Math.floor(y / 0.14) !== Math.floor(neighborZ / 0.14);
         if (contour) {
@@ -73,7 +81,6 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
     context.putImageData(image, 0, 0);
 
     if (structure === 'fault') {
-      const mapX = (x: number) => ((x - BOUNDS.minX) / (BOUNDS.maxX - BOUNDS.minX)) * width;
       context.strokeStyle = 'rgba(15,23,42,.88)';
       context.lineWidth = 4;
       context.setLineDash([10, 6]);
@@ -96,8 +103,8 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
           previousValue = value;
         }
         if (root !== null) {
-          if (!drawing) context.moveTo(mapX(root), py);
-          else context.lineTo(mapX(root), py);
+          if (!drawing) context.moveTo(worldToMapX(root, width), py);
+          else context.lineTo(worldToMapX(root, width), py);
           drawing = true;
         } else {
           drawing = false;
@@ -117,7 +124,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
     context.fillStyle = '#1e293b';
     context.font = '700 22px sans-serif';
     context.textAlign = 'center';
-    for (const [label, x] of [['Y', 18], ['X', width - 18]] as const) {
+    for (const [label, x] of [['X', 18], ['Y', width - 18]] as const) {
       context.beginPath();
       context.arc(x, lineY, 15, 0, Math.PI * 2);
       context.fill();
@@ -128,7 +135,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
 
     for (const marker of markers) {
       context.save();
-      const centerX = ((marker.x - BOUNDS.minX) / (BOUNDS.maxX - BOUNDS.minX)) * width;
+      const centerX = worldToMapX(marker.x, width);
       const centerY = worldToMap(marker.z, height);
       const orientation = beddingOrientationAt(
         marker.x,
@@ -142,10 +149,10 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
         unconformityDip,
       );
       const strikeRadians = (orientation.strike * Math.PI) / 180;
-      const strikeX = Math.sin(strikeRadians);
+      const strikeX = -Math.sin(strikeRadians);
       const strikeY = -Math.cos(strikeRadians);
       const dipDirectionRadians = (orientation.dipDirection * Math.PI) / 180;
-      const dipX = Math.sin(dipDirectionRadians);
+      const dipX = -Math.sin(dipDirectionRadians);
       const dipY = -Math.cos(dipDirectionRadians);
 
       const drawSymbolPath = () => {
@@ -222,7 +229,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
     const rect = canvas.getBoundingClientRect();
     const px = ((clientX - rect.left) / rect.width) * canvas.width;
     const py = ((clientY - rect.top) / rect.height) * canvas.height;
-    const x = BOUNDS.minX + (Math.max(0, Math.min(canvas.width, px)) / canvas.width) * (BOUNDS.maxX - BOUNDS.minX);
+    const x = mapToWorldX(Math.max(0, Math.min(canvas.width, px)), canvas.width);
     const z = mapToWorldZ(Math.max(0, Math.min(canvas.height, py)), canvas.height);
     setMarkers((current) => [...current, { x, z }]);
   };
@@ -237,7 +244,7 @@ export function GeologyMap({ strike, dip, sectionZ, terrain, structure, geologyO
     let nearestDistance = 30;
 
     markers.forEach((marker, index) => {
-      const markerX = ((marker.x - BOUNDS.minX) / (BOUNDS.maxX - BOUNDS.minX)) * canvas.width;
+      const markerX = worldToMapX(marker.x, canvas.width);
       const markerY = worldToMap(marker.z, canvas.height);
       const distance = Math.hypot(pointerX - markerX, pointerY - markerY);
       if (distance < nearestDistance) {
